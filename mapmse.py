@@ -72,9 +72,10 @@ st.markdown("""
     color: #2E75B6 !important; font-weight: 600 !important;
   }
 
-  /* All body / paragraph text */
-  p, li, ol, ul, span, td, th,
-  .stMarkdown p, .stMarkdown li, .stMarkdown span,
+  /* All body / paragraph text — scoped to Streamlit markdown only,
+     NOT global so Plotly SVG text is untouched */
+  .stMarkdown p, .stMarkdown li, .stMarkdown ol, .stMarkdown ul,
+  .stMarkdown span, .stMarkdown td, .stMarkdown th,
   [data-testid="stMarkdownContainer"] p,
   [data-testid="stMarkdownContainer"] li,
   [data-testid="stMarkdownContainer"] span,
@@ -83,10 +84,10 @@ st.markdown("""
     color: #212529 !important;
   }
 
-  /* Bold/strong — dark not white */
-  strong, b,
-  .stMarkdown strong,
-  [data-testid="stMarkdownContainer"] strong {
+  /* Bold/strong — scoped to markdown only */
+  .stMarkdown strong, .stMarkdown b,
+  [data-testid="stMarkdownContainer"] strong,
+  [data-testid="stMarkdownContainer"] b {
     color: #1F4E79 !important;
   }
 
@@ -1044,7 +1045,7 @@ if page == "🔌 Data Sources":
                                    marker_colors=["#1F4E79","#2E75B6","#28a745","#ffc107"]))
             fig.update_layout(height=220, margin=dict(l=0,r=0,t=10,b=0),
                               showlegend=False, paper_bgcolor="white",
-                              font=dict(family="Inter", size=10))
+                              font=dict(family="Inter", size=10, color="#212529"))
             st.plotly_chart(fig, use_container_width=True)
         with col2:
             st.dataframe(src_pie, use_container_width=True, hide_index=True)
@@ -1084,8 +1085,15 @@ elif page == "📊 Dashboard":
             fig = px.bar(sc, x="count", y="State", orientation="h",
                          color="count", color_continuous_scale=["#cce4ff","#1F4E79"])
             fig.update_layout(height=340, margin=dict(l=0,r=0,t=10,b=0),
-                              coloraxis_showscale=False, paper_bgcolor="white",
-                              plot_bgcolor="white", font=dict(family="Inter",size=11))
+                              coloraxis_showscale=False,
+                              paper_bgcolor="white", plot_bgcolor="white",
+                              font=dict(family="Inter", size=11, color="#212529"),
+                              xaxis=dict(tickfont=dict(color="#495057",size=10),
+                                         title_font=dict(color="#495057"),
+                                         gridcolor="#e9ecef", linecolor="#dee2e6"),
+                              yaxis=dict(tickfont=dict(color="#212529",size=10),
+                                         title_font=dict(color="#495057"),
+                                         gridcolor="#e9ecef", linecolor="#dee2e6"))
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1100,8 +1108,11 @@ elif page == "📊 Dashboard":
             fig.add_annotation(text=f"<b>{len(df_mse):,}</b><br>Total",
                                x=0.5,y=0.5,font=dict(size=13,color="#1F4E79"),showarrow=False)
             fig.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=0),
-                              showlegend=True, legend=dict(font=dict(size=9)),
-                              paper_bgcolor="white", font=dict(family="Inter"))
+                              showlegend=True,
+                              legend=dict(font=dict(size=9, color="#212529"),
+                                          bgcolor="rgba(255,255,255,0.9)"),
+                              paper_bgcolor="white",
+                              font=dict(family="Inter", color="#212529"))
             st.plotly_chart(fig, use_container_width=True)
 
     col1,col2 = st.columns(2)
@@ -1112,9 +1123,16 @@ elif page == "📊 Dashboard":
             fig = px.bar(sd, x="Sector", y="count",
                          color="count", color_continuous_scale=["#bee3f8","#1F4E79"])
             fig.update_layout(height=300, margin=dict(l=0,r=10,t=10,b=80),
-                              coloraxis_showscale=False, paper_bgcolor="white",
-                              plot_bgcolor="#f8f9fa", font=dict(family="Inter",size=10),
-                              xaxis=dict(tickangle=-35,tickfont=dict(size=9)))
+                              coloraxis_showscale=False,
+                              paper_bgcolor="white", plot_bgcolor="#f8f9fa",
+                              font=dict(family="Inter", size=10, color="#212529"),
+                              xaxis=dict(tickangle=-35,
+                                         tickfont=dict(size=9, color="#212529"),
+                                         title_font=dict(color="#495057"),
+                                         gridcolor="#e9ecef", linecolor="#dee2e6"),
+                              yaxis=dict(tickfont=dict(color="#495057", size=9),
+                                         title_font=dict(color="#495057"),
+                                         gridcolor="#e9ecef", linecolor="#dee2e6"))
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1134,9 +1152,17 @@ elif page == "📊 Dashboard":
                 fig.update_layout(height=300, barmode="overlay",
                                   margin=dict(l=0,r=0,t=10,b=0),
                                   paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                                  font=dict(family="Inter",size=11),
-                                  legend=dict(font=dict(size=10)),
-                                  xaxis_title="Days", yaxis_title="Count")
+                                  font=dict(family="Inter", size=11, color="#212529"),
+                                  legend=dict(font=dict(size=10, color="#212529"),
+                                              bgcolor="rgba(255,255,255,0.9)"),
+                                  xaxis=dict(title="Days",
+                                             title_font=dict(color="#495057"),
+                                             tickfont=dict(color="#495057"),
+                                             gridcolor="#e9ecef", linecolor="#dee2e6"),
+                                  yaxis=dict(title="Count",
+                                             title_font=dict(color="#495057"),
+                                             tickfont=dict(color="#495057"),
+                                             gridcolor="#e9ecef", linecolor="#dee2e6"))
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No onboarding time data available yet.")
@@ -1149,7 +1175,10 @@ elif page == "📊 Dashboard":
                      color_discrete_sequence=["#1F4E79","#2E75B6","#28a745","#ffc107"])
         fig.update_layout(height=250, margin=dict(l=0,r=0,t=10,b=0),
                           showlegend=False, paper_bgcolor="white",
-                          plot_bgcolor="#f8f9fa", font=dict(family="Inter",size=11))
+                          plot_bgcolor="#f8f9fa",
+                          font=dict(family="Inter", size=11, color="#212529"),
+                          xaxis=dict(tickfont=dict(color="#212529"), gridcolor="#e9ecef"),
+                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef"))
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -1326,8 +1355,10 @@ elif page == "🔍 Product Categoriser":
                           labels=["<80% Review","80–90%","90–95%","95–100%"]).value_counts()
             fig = go.Figure(go.Pie(labels=cats.index, values=cats.values, hole=0.4,
                                    marker_colors=["#dc3545","#ffc107","#17a2b8","#28a745"]))
-            fig.update_layout(height=240,margin=dict(l=0,r=0,t=10,b=0),
-                              paper_bgcolor="white",font=dict(family="Inter"))
+            fig.update_layout(height=240, margin=dict(l=0,r=0,t=10,b=0),
+                              paper_bgcolor="white",
+                              font=dict(family="Inter", color="#212529"),
+                              legend=dict(font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"))
             st.plotly_chart(fig, use_container_width=True)
         with col2:
             st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:6px;'>📊 Accuracy by Sector</p>", unsafe_allow_html=True)
@@ -1492,10 +1523,14 @@ elif page == "📈 Analytics":
                                  line=dict(color="#1B5E20",width=2.5),fill="tozeroy",
                                  fillcolor="rgba(27,94,32,0.08)"))
         fig.update_layout(title="Cumulative Registrations vs Onboardings",
+                          title_font=dict(color="#1F4E79", size=13),
                           height=300, margin=dict(l=0,r=0,t=40,b=0),
                           paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter",size=11),
-                          legend=dict(orientation="h",y=1.15))
+                          font=dict(family="Inter", size=11, color="#212529"),
+                          legend=dict(orientation="h", y=1.15,
+                                      font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"),
+                          xaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"),
+                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1507,9 +1542,12 @@ elif page == "📈 Analytics":
         fig.add_hline(y=90, line_dash="dash", line_color="#dc3545",
                       annotation_text="Target: 90%")
         fig.update_layout(title="Categorisation Accuracy Trend (%)",
+                          title_font=dict(color="#1F4E79", size=13),
                           height=300, margin=dict(l=0,r=0,t=40,b=0),
                           paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter",size=11))
+                          font=dict(family="Inter", size=11, color="#212529"),
+                          xaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"),
+                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"))
         st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-header">🏢 SNP Performance Leaderboard</div>',
@@ -1534,6 +1572,12 @@ elif page == "📈 Analytics":
                          marker_color="#1F4E79", opacity=0.9))
     fig.update_layout(barmode="group", height=320, margin=dict(l=0,r=0,t=10,b=0),
                       paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                      font=dict(family="Inter",size=11),
-                      legend=dict(orientation="h",y=1.05))
+                      font=dict(family="Inter", size=11, color="#212529"),
+                      legend=dict(orientation="h", y=1.05,
+                                  font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"),
+                      xaxis=dict(tickfont=dict(color="#212529", size=10),
+                                 tickangle=-20,
+                                 gridcolor="#e9ecef", linecolor="#dee2e6"),
+                      yaxis=dict(tickfont=dict(color="#495057"),
+                                 gridcolor="#e9ecef", linecolor="#dee2e6"))
     st.plotly_chart(fig, use_container_width=True)
