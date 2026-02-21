@@ -42,10 +42,32 @@ st.markdown("""
   html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
   .stApp { background: #f0f4f8; }
 
+  /* ── Sidebar: scoped so it never bleeds into main content ── */
   section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1F4E79 0%, #2E75B6 100%) !important;
   }
-  section[data-testid="stSidebar"] * { color: #ffffff !important; }
+  section[data-testid="stSidebar"] p,
+  section[data-testid="stSidebar"] span,
+  section[data-testid="stSidebar"] label,
+  section[data-testid="stSidebar"] div,
+  section[data-testid="stSidebar"] small,
+  section[data-testid="stSidebar"] li,
+  section[data-testid="stSidebar"] a { color: #ffffff !important; }
+
+  /* ── Main content: force headings to brand dark blue ── */
+  [data-testid="stMainBlockContainer"] h1,
+  [data-testid="stAppViewBlockContainer"] h1,
+  .main h1 { color: #1F4E79 !important; font-weight: 700 !important; }
+  [data-testid="stMainBlockContainer"] h2,
+  [data-testid="stAppViewBlockContainer"] h2,
+  .main h2 { color: #1F4E79 !important; font-weight: 600 !important; }
+  [data-testid="stMainBlockContainer"] h3,
+  .main h3 { color: #2E75B6 !important; font-weight: 600 !important; }
+  /* All body text in main area stays dark */
+  [data-testid="stMainBlockContainer"] p,
+  [data-testid="stAppViewBlockContainer"] p,
+  .stMarkdown p, .stMarkdown li, .stMarkdown span { color: #212529 !important; }
+  blockquote p { color: #495057 !important; }
 
   .metric-card {
     background: white; border-radius: 12px; padding: 20px 24px;
@@ -487,7 +509,7 @@ st.markdown(f"""
   <div style="text-align:right;">
     {src_badge}
     <div style="color:#a8d4f5;font-size:0.78rem;margin-top:6px;">
-      🕐 {datetime.now().strftime('%H:%M, %d %b %Y')}
+      🕐 {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime('%H:%M IST, %d %b %Y')}
     </div>
   </div>
 </div>
