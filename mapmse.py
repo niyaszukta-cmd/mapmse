@@ -802,7 +802,6 @@ elif page == "📋 MSE Registry":
                     "Assigned SNP", "Match Score", "Onboarding Time (days)", "Categorisation Confidence"]
     st.dataframe(
         df_filtered[display_cols].head(100).style
-        .background_gradient(subset=["Match Score", "Categorisation Confidence"], cmap="Blues")
         .format({"Match Score": "{:.2f}", "Categorisation Confidence": "{:.2f}",
                  "Onboarding Time (days)": "{:.1f}"}),
         use_container_width=True, height=420
@@ -858,8 +857,6 @@ elif page == "📈 Analytics":
     st.markdown('<div class="section-header">🏢 SNP Performance Leaderboard</div>', unsafe_allow_html=True)
     st.dataframe(
         df_snp.sort_values("Avg Fulfilment Rate (%)", ascending=False).style
-        .background_gradient(subset=["Avg Fulfilment Rate (%)", "Rating"], cmap="Greens")
-        .background_gradient(subset=["Current Load (%)"], cmap="RdYlGn_r")
         .format({"Avg Fulfilment Rate (%)": "{:.1f}%", "Rating": "⭐ {:.1f}",
                  "Onboarding Avg (days)": "{:.1f}d"}),
         use_container_width=True
