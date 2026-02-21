@@ -522,12 +522,17 @@ df_mse = st.session_state["df_mse"]
 # ══════════════════════ PAGE: DATA SOURCES ════════════════════════
 if page == "🔌 Data Sources":
 
-    st.markdown("## 🔌 Data Sources — How Real Data Enters MapMSE")
+    st.markdown('<div class="section-header">🔌 Data Sources — How Real Data Enters MapMSE</div>',
+                unsafe_allow_html=True)
     st.markdown("""
-    > This page is your **control panel for data**. Think of it like choosing the
-    > fuel for the engine. You can switch between Demo data, your own Excel file,
-    > or a live government API — and the entire app updates instantly.
-    """)
+    <div class="info-card" style="margin-bottom:12px;">
+      <span style="color:#1F4E79;font-size:0.95rem;">
+      📌 <strong>This is your control panel for data.</strong> Think of it like choosing the
+      fuel for the engine. You can switch between Demo data, your own Excel file,
+      or a live government API — and the entire app updates instantly across all pages.
+      </span>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── VISUAL PIPELINE ─────────────────────────────────────────────
     st.markdown('<div class="section-header">🗺️ How Data Flows Through the System</div>',
