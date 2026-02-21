@@ -42,7 +42,7 @@ st.markdown("""
   html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
   .stApp { background: #f0f4f8; }
 
-  /* ── Sidebar: scoped so it never bleeds into main content ── */
+  /* ══ SIDEBAR — white text, never bleeds into main ══ */
   section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1F4E79 0%, #2E75B6 100%) !important;
   }
@@ -52,22 +52,92 @@ st.markdown("""
   section[data-testid="stSidebar"] div,
   section[data-testid="stSidebar"] small,
   section[data-testid="stSidebar"] li,
-  section[data-testid="stSidebar"] a { color: #ffffff !important; }
+  section[data-testid="stSidebar"] a,
+  section[data-testid="stSidebar"] strong,
+  section[data-testid="stSidebar"] em { color: #ffffff !important; }
 
-  /* ── Main content: force headings to brand dark blue ── */
-  [data-testid="stMainBlockContainer"] h1,
-  [data-testid="stAppViewBlockContainer"] h1,
-  .main h1 { color: #1F4E79 !important; font-weight: 700 !important; }
-  [data-testid="stMainBlockContainer"] h2,
-  [data-testid="stAppViewBlockContainer"] h2,
-  .main h2 { color: #1F4E79 !important; font-weight: 600 !important; }
-  [data-testid="stMainBlockContainer"] h3,
-  .main h3 { color: #2E75B6 !important; font-weight: 600 !important; }
-  /* All body text in main area stays dark */
-  [data-testid="stMainBlockContainer"] p,
-  [data-testid="stAppViewBlockContainer"] p,
-  .stMarkdown p, .stMarkdown li, .stMarkdown span { color: #212529 !important; }
-  blockquote p { color: #495057 !important; }
+  /* ══ MAIN CONTENT — nuclear text color enforcement ══
+     Covers every Streamlit text path so theme cannot
+     override and make text invisible on light background */
+
+  /* Headings */
+  h1, h2, .stMarkdown h1, .stMarkdown h2,
+  [data-testid="stMarkdownContainer"] h1,
+  [data-testid="stMarkdownContainer"] h2 {
+    color: #1F4E79 !important; font-weight: 700 !important;
+  }
+  h3, h4, h5, h6, .stMarkdown h3,
+  [data-testid="stMarkdownContainer"] h3,
+  [data-testid="stMarkdownContainer"] h4 {
+    color: #2E75B6 !important; font-weight: 600 !important;
+  }
+
+  /* All body / paragraph text */
+  p, li, ol, ul, span, td, th,
+  .stMarkdown p, .stMarkdown li, .stMarkdown span,
+  [data-testid="stMarkdownContainer"] p,
+  [data-testid="stMarkdownContainer"] li,
+  [data-testid="stMarkdownContainer"] span,
+  [data-testid="stMarkdownContainer"] td,
+  [data-testid="stMarkdownContainer"] th {
+    color: #212529 !important;
+  }
+
+  /* Bold/strong — dark not white */
+  strong, b,
+  .stMarkdown strong,
+  [data-testid="stMarkdownContainer"] strong {
+    color: #1F4E79 !important;
+  }
+
+  /* Blockquotes */
+  blockquote, .stMarkdown blockquote,
+  [data-testid="stMarkdownContainer"] blockquote {
+    border-left: 4px solid #2E75B6 !important;
+    background: #f0f7ff !important;
+    padding: 10px 16px !important;
+    border-radius: 0 8px 8px 0 !important;
+    color: #495057 !important;
+  }
+  blockquote p,
+  [data-testid="stMarkdownContainer"] blockquote p {
+    color: #495057 !important;
+  }
+
+  /* Inline code */
+  code, .stMarkdown code,
+  [data-testid="stMarkdownContainer"] code {
+    background: #e8f0fe !important;
+    color: #1F4E79 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+  }
+
+  /* Form/widget labels */
+  label, .stTextInput label, .stSelectbox label,
+  .stNumberInput label, .stTextArea label,
+  .stSlider label, .stRadio label, .stCheckbox label,
+  .stFileUploader label, [data-testid="stWidgetLabel"],
+  [data-testid="stWidgetLabel"] p {
+    color: #212529 !important; font-weight: 500 !important;
+  }
+
+  /* Expander header */
+  .streamlit-expanderHeader, [data-testid="stExpanderToggleIcon"],
+  details summary {
+    color: #1F4E79 !important; font-weight: 600 !important;
+  }
+  .streamlit-expanderContent p,
+  .streamlit-expanderContent li,
+  details p, details li { color: #212529 !important; }
+
+  /* Caption / helper text */
+  .stCaption, [data-testid="stCaption"],
+  small { color: #6c757d !important; }
+
+  /* Info / success / warning / error box text */
+  [data-testid="stAlert"] p,
+  [data-testid="stAlert"] div { color: inherit !important; }
 
   .metric-card {
     background: white; border-radius: 12px; padding: 20px 24px;
@@ -657,7 +727,7 @@ if page == "🔌 Data Sources":
                     st.success(f"✅ Loaded **{len(df_new):,} MSEs** from `{uploaded.name}`")
 
                     # Preview
-                    st.markdown("**Preview (first 5 rows):**")
+                    st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📋 Preview (first 5 rows):</p>", unsafe_allow_html=True)
                     preview_cols = ["Enterprise Name","State","Sector",
                                     "Annual Turnover (L)","No. of Employees",
                                     "Status","Categorisation Confidence"]
@@ -736,7 +806,7 @@ if page == "🔌 Data Sources":
                 st.info("ℹ️ No API key — running in simulation mode")
 
         with col2:
-            st.markdown("**Look up a single enterprise:**")
+            st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>🔍 Look up a single enterprise:</p>", unsafe_allow_html=True)
             udyam_input = st.text_input(
                 "Udyam Registration Number",
                 placeholder="e.g. UDYAM-KL-08-0023456",
@@ -755,7 +825,7 @@ if page == "🔌 Data Sources":
                     st.json(data)
 
                     new_row = parse_udyam_response_to_row(data)
-                    st.markdown("**Converted to app format:**")
+                    st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>✅ Converted to app format:</p>", unsafe_allow_html=True)
                     st.dataframe(pd.DataFrame([new_row]), use_container_width=True)
 
                     if st.button("➕ Add this MSE to Registry", use_container_width=True):
@@ -913,7 +983,7 @@ if page == "🔌 Data Sources":
                 st.rerun()
 
         # Show what synthetic data looks like vs what real data looks like
-        st.markdown("**Side-by-side: Demo Data vs Real Data**")
+        st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📊 Side-by-side: Demo Data vs Real Data</p>", unsafe_allow_html=True)
         comp = pd.DataFrame([
             ["Enterprise Name",   "Shree Industries Pvt Ltd (random words)", "Vijaya Cotton Mills Pvt Ltd (actual company)"],
             ["Turnover",          "₹127.4 Lakhs (random number)",            "₹127.4 Lakhs (from GST returns / Udyam)"],
@@ -1260,7 +1330,7 @@ elif page == "🔍 Product Categoriser":
                               paper_bgcolor="white",font=dict(family="Inter"))
             st.plotly_chart(fig, use_container_width=True)
         with col2:
-            st.markdown("**Accuracy by Sector**")
+            st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:6px;'>📊 Accuracy by Sector</p>", unsafe_allow_html=True)
             sa = df_mse.groupby("Sector")["Categorisation Confidence"].mean().sort_values(ascending=False)
             for sector,acc in sa.items():
                 bw = int(acc*100)
@@ -1370,8 +1440,7 @@ elif page == "📋 MSE Registry":
                 mask |= df_f[col].astype(str).str.contains(search, case=False, na=False)
         df_f = df_f[mask]
 
-    st.markdown(f"**Showing {len(df_f):,} of {len(df_mse):,} MSEs** — "
-                f"Source: `{st.session_state.get('source_label','')}`")
+    st.markdown(f"<p style='color:#495057;font-size:0.9rem;'><strong style='color:#1F4E79;'>Showing {len(df_f):,} of {len(df_mse):,} MSEs</strong> — Source: <code style='background:#e8f0fe;color:#1F4E79;padding:1px 5px;border-radius:4px;'>{st.session_state.get('source_label','')}</code></p>", unsafe_allow_html=True)
 
     display_cols = [c for c in ["MSE ID","Enterprise Name","State","Sector","Status",
                                  "Assigned SNP","Match Score","Onboarding Time (days)",
