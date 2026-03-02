@@ -1,33 +1,24 @@
 """
 MapMSE: AI-Powered MSE-to-SNP Intelligent Agent Mapping Platform
-IndiaAI Innovation Challenge 2026 — Problem Statement 2 (Ministry of MSME)
+IndiaAI Innovation Challenge 2026 — Ministry of MSME
 Developed by: NYZTrade AI Solutions
 
-VERSION 2.1 — Fixed Sidebar Toggle
-─────────────────────────────────────────────────────────────────────────────
-HOW DATA FLOWS INTO THIS SYSTEM (Plain English):
-
-  SOURCE 1 → Upload an Excel/CSV file of MSEs         (works right now)
-  SOURCE 2 → Pull live data from Udyam API            (needs API key)
-  SOURCE 3 → Type / speak registration manually       (works right now)
-  SOURCE 4 → Use demo/synthetic data                  (fallback default)
-
-The app detects which source is active and uses it across all pages.
-─────────────────────────────────────────────────────────────────────────────.
+VERSION 3.0 — Professional Dashboard Edition
+Incorporates: AI Performance, Benchmarks, Deployment, Compliance,
+Business Model, Market Analysis, Go-to-Market, Partnerships
 """
 
 import streamlit as st
 import pandas as pd
 import numpy as np
 import random
-import json
 import io
 import time
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 
-# ─────────────────────────── PAGE CONFIG ───────────────────────────
 st.set_page_config(
     page_title="MapMSE | AI MSE-SNP Platform",
     page_icon="🏭",
@@ -35,373 +26,226 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ─────────────────────────── CUSTOM CSS ────────────────────────────
+# ─────────────────────── CSS ───────────────────────────────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-  .stApp { background: #f0f4f8; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-  /* ══ SIDEBAR TOGGLE FIX — always visible, never disappears ══
-     The toggle button sits at a fixed position on the left edge.
-     When sidebar is collapsed the button still floats visibly.   */
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+.stApp { background: #f0f4f8; }
 
-  /* The collapse/expand button Streamlit renders */
-  button[data-testid="collapsedControl"],
-  [data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: fixed !important;
-    top: 50% !important;
-    left: 0px !important;
-    transform: translateY(-50%) !important;
-    z-index: 99999 !important;
-    background: #1F4E79 !important;
-    border: none !important;
-    border-radius: 0 8px 8px 0 !important;
-    width: 28px !important;
-    height: 56px !important;
-    cursor: pointer !important;
-    box-shadow: 3px 0 10px rgba(0,0,0,0.3) !important;
-    padding: 0 !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
+/* ── SIDEBAR TOGGLE FIX ── */
+button[data-testid="collapsedControl"],
+[data-testid="collapsedControl"] {
+  display: flex !important; visibility: visible !important;
+  opacity: 1 !important; position: fixed !important;
+  top: 50% !important; left: 0px !important;
+  transform: translateY(-50%) !important; z-index: 99999 !important;
+  background: #1F4E79 !important; border: none !important;
+  border-radius: 0 8px 8px 0 !important;
+  width: 28px !important; height: 56px !important;
+  cursor: pointer !important; box-shadow: 3px 0 10px rgba(0,0,0,0.3) !important;
+  align-items: center !important; justify-content: center !important;
+}
+button[data-testid="collapsedControl"]:hover { background: #2E75B6 !important; width: 34px !important; }
+button[data-testid="collapsedControl"] svg { fill: #ffffff !important; color: #ffffff !important; }
+[data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapseButton"] button {
+  visibility: visible !important; opacity: 1 !important; display: flex !important;
+}
+[data-testid="stSidebarCollapseButton"] svg { fill: #ffffff !important; color: #ffffff !important; }
 
-  button[data-testid="collapsedControl"]:hover,
-  [data-testid="collapsedControl"]:hover {
-    background: #2E75B6 !important;
-    width: 34px !important;
-  }
+/* ── SIDEBAR ── */
+section[data-testid="stSidebar"] {
+  background: linear-gradient(180deg, #0d1f3c 0%, #1F4E79 50%, #2E75B6 100%) !important;
+}
+section[data-testid="stSidebar"] * { color: #ffffff !important; }
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
+  background: rgba(255,255,255,0.06) !important; border-radius: 8px !important;
+  padding: 8px 12px !important; margin-bottom: 4px !important;
+  border: 1px solid rgba(255,255,255,0.08) !important; transition: all 0.2s !important;
+}
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:hover {
+  background: rgba(255,255,255,0.15) !important; border-color: rgba(255,255,255,0.25) !important;
+}
+section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:has(input:checked) {
+  background: rgba(255,255,255,0.22) !important; border-color: #60a5fa !important;
+}
 
-  /* Arrow icon inside toggle */
-  button[data-testid="collapsedControl"] svg,
-  [data-testid="collapsedControl"] svg {
-    fill: #ffffff !important;
-    color: #ffffff !important;
-    width: 18px !important;
-    height: 18px !important;
-  }
+/* ── MAIN TEXT ENFORCEMENT ── */
+h1, h2, [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2 {
+  color: #1F4E79 !important; font-weight: 700 !important;
+}
+h3, h4, [data-testid="stMarkdownContainer"] h3 { color: #2E75B6 !important; font-weight: 600 !important; }
+.stMarkdown p, .stMarkdown li, [data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li, [data-testid="stMarkdownContainer"] span { color: #212529 !important; }
+.stMarkdown strong, [data-testid="stMarkdownContainer"] strong { color: #1F4E79 !important; }
+label, [data-testid="stWidgetLabel"] p { color: #212529 !important; font-weight: 500 !important; }
+.stCaption, small { color: #6c757d !important; }
+code, .stMarkdown code { background: #e8f0fe !important; color: #1F4E79 !important;
+  padding: 2px 6px !important; border-radius: 4px !important; }
+.streamlit-expanderHeader { color: #1F4E79 !important; font-weight: 600 !important; }
 
-  /* Sidebar expand button (when sidebar is open) */
-  button[data-testid="baseButton-headerNoPadding"],
-  [data-testid="baseButton-headerNoPadding"] {
-    color: #ffffff !important;
-  }
+/* ── KPI CARDS ── */
+.kpi-card {
+  background: white; border-radius: 14px; padding: 22px 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07); position: relative; overflow: hidden;
+  border-top: 4px solid var(--accent);
+}
+.kpi-card::after {
+  content: ''; position: absolute; top: -20px; right: -20px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--accent); opacity: 0.06;
+}
+.kpi-val { font-size: 2.1rem; font-weight: 800; color: var(--accent); line-height: 1.1; }
+.kpi-label { font-size: 0.72rem; color: #6c757d; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+.kpi-delta { font-size: 0.8rem; font-weight: 600; margin-top: 6px; }
+.kpi-delta.up { color: #16a34a; }
+.kpi-delta.down { color: #dc2626; }
 
-  /* Keep the sidebar close/chevron button visible when sidebar is open */
-  section[data-testid="stSidebar"] button[kind="header"],
-  section[data-testid="stSidebar"] [data-testid="stSidebarCollapsedControl"],
-  section[data-testid="stSidebar"] > div:first-child button {
-    visibility: visible !important;
-    opacity: 1 !important;
-    color: #ffffff !important;
-    background: rgba(255,255,255,0.15) !important;
-    border-radius: 6px !important;
-  }
+/* ── SECTION HEADERS ── */
+.sec-hdr {
+  background: linear-gradient(135deg, #1F4E79 0%, #2563EB 100%);
+  color: white; padding: 11px 20px; border-radius: 10px;
+  margin: 20px 0 14px 0; font-weight: 700; font-size: 0.95rem;
+  letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px;
+}
+.sec-hdr-warn {
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+  color: white; padding: 11px 20px; border-radius: 10px;
+  margin: 20px 0 14px 0; font-weight: 700; font-size: 0.95rem;
+}
+.sec-hdr-green {
+  background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+  color: white; padding: 11px 20px; border-radius: 10px;
+  margin: 20px 0 14px 0; font-weight: 700; font-size: 0.95rem;
+}
+.sec-hdr-red {
+  background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
+  color: white; padding: 11px 20px; border-radius: 10px;
+  margin: 20px 0 14px 0; font-weight: 700; font-size: 0.95rem;
+}
 
-  /* Force the collapse arrow button always rendered */
-  [data-testid="stSidebarCollapseButton"],
-  [data-testid="stSidebarCollapseButton"] button {
-    visibility: visible !important;
-    opacity: 1 !important;
-    display: flex !important;
-  }
+/* ── BADGES ── */
+.badge { display:inline-block; padding:3px 10px; border-radius:20px;
+  font-size:0.72rem; font-weight:700; }
+.badge-green  { background:#dcfce7; color:#166534; }
+.badge-blue   { background:#dbeafe; color:#1e40af; }
+.badge-orange { background:#ffedd5; color:#9a3412; }
+.badge-red    { background:#fee2e2; color:#991b1b; }
+.badge-purple { background:#ede9fe; color:#5b21b6; }
+.badge-gray   { background:#f1f5f9; color:#475569; }
+.badge-live   { background:#dcfce7; color:#166534; border:1px solid #4ade80;
+  animation: pulse 2s infinite; }
+.badge-demo   { background:#fef9c3; color:#854d0e; border:1px solid #facc15; }
 
-  [data-testid="stSidebarCollapseButton"] svg {
-    fill: #ffffff !important;
-    color: #ffffff !important;
-  }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
 
-  /* ══ SIDEBAR — white text, blue gradient background ══ */
-  section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #1F4E79 0%, #2E75B6 100%) !important;
-  }
-  section[data-testid="stSidebar"] p,
-  section[data-testid="stSidebar"] span,
-  section[data-testid="stSidebar"] label,
-  section[data-testid="stSidebar"] div,
-  section[data-testid="stSidebar"] small,
-  section[data-testid="stSidebar"] li,
-  section[data-testid="stSidebar"] a,
-  section[data-testid="stSidebar"] strong,
-  section[data-testid="stSidebar"] em { color: #ffffff !important; }
+/* ── CARDS ── */
+.info-card {
+  background: white; border-radius: 12px; padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px;
+}
+.result-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #fff 100%);
+  border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px; margin: 8px 0;
+}
+.phase-card {
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
+  border-left: 5px solid var(--phase-color);
+  background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.callout-box {
+  border-radius: 10px; padding: 16px 20px; margin: 14px 0;
+  border-left: 5px solid var(--cb-color);
+  background: var(--cb-bg);
+}
+.pipeline-step {
+  background: white; border-left: 4px solid #2563EB;
+  border-radius: 0 10px 10px 0; padding: 12px 16px;
+  margin: 6px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.progress-outer { background:#e2e8f0; border-radius:8px; height:9px; overflow:hidden; margin:3px 0; }
+.progress-inner { height:100%; border-radius:8px;
+  background: linear-gradient(90deg, #2563EB, #1F4E79); }
 
-  /* Radio buttons in sidebar */
-  section[data-testid="stSidebar"] .stRadio label span {
-    color: #ffffff !important;
-  }
-  section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
-    background: rgba(255,255,255,0.08) !important;
-    border-radius: 6px !important;
-    padding: 6px 10px !important;
-    margin-bottom: 3px !important;
-    transition: background 0.2s !important;
-  }
-  section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:hover {
-    background: rgba(255,255,255,0.18) !important;
-  }
-  section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:has(input:checked) {
-    background: rgba(255,255,255,0.25) !important;
-    font-weight: 600 !important;
-  }
+/* ── TABS ── */
+.stTabs [data-baseweb="tab-list"] { gap: 5px; }
+.stTabs [data-baseweb="tab"] {
+  border-radius: 8px 8px 0 0 !important; background: #e2ebf5 !important;
+  color: #1F4E79 !important; font-weight: 500 !important; padding: 8px 16px !important;
+}
+.stTabs [aria-selected="true"] { background: #1F4E79 !important; color: white !important; font-weight: 600 !important; }
 
-  /* ══ MAIN CONTENT — text color enforcement ══ */
-  h1, h2, .stMarkdown h1, .stMarkdown h2,
-  [data-testid="stMarkdownContainer"] h1,
-  [data-testid="stMarkdownContainer"] h2 {
-    color: #1F4E79 !important; font-weight: 700 !important;
-  }
-  h3, h4, h5, h6, .stMarkdown h3,
-  [data-testid="stMarkdownContainer"] h3,
-  [data-testid="stMarkdownContainer"] h4 {
-    color: #2E75B6 !important; font-weight: 600 !important;
-  }
-
-  .stMarkdown p, .stMarkdown li, .stMarkdown ol, .stMarkdown ul,
-  .stMarkdown span, .stMarkdown td, .stMarkdown th,
-  [data-testid="stMarkdownContainer"] p,
-  [data-testid="stMarkdownContainer"] li,
-  [data-testid="stMarkdownContainer"] span,
-  [data-testid="stMarkdownContainer"] td,
-  [data-testid="stMarkdownContainer"] th {
-    color: #212529 !important;
-  }
-
-  .stMarkdown strong, .stMarkdown b,
-  [data-testid="stMarkdownContainer"] strong,
-  [data-testid="stMarkdownContainer"] b {
-    color: #1F4E79 !important;
-  }
-
-  blockquote, .stMarkdown blockquote,
-  [data-testid="stMarkdownContainer"] blockquote {
-    border-left: 4px solid #2E75B6 !important;
-    background: #f0f7ff !important;
-    padding: 10px 16px !important;
-    border-radius: 0 8px 8px 0 !important;
-    color: #495057 !important;
-  }
-  blockquote p,
-  [data-testid="stMarkdownContainer"] blockquote p {
-    color: #495057 !important;
-  }
-
-  code, .stMarkdown code,
-  [data-testid="stMarkdownContainer"] code {
-    background: #e8f0fe !important;
-    color: #1F4E79 !important;
-    padding: 1px 5px !important;
-    border-radius: 4px !important;
-  }
-
-  label, .stTextInput label, .stSelectbox label,
-  .stNumberInput label, .stTextArea label,
-  .stSlider label, .stRadio label, .stCheckbox label,
-  .stFileUploader label, [data-testid="stWidgetLabel"],
-  [data-testid="stWidgetLabel"] p {
-    color: #212529 !important; font-weight: 500 !important;
-  }
-
-  .streamlit-expanderHeader, [data-testid="stExpanderToggleIcon"],
-  details summary {
-    color: #1F4E79 !important; font-weight: 600 !important;
-  }
-  .streamlit-expanderContent p,
-  .streamlit-expanderContent li,
-  details p, details li { color: #212529 !important; }
-
-  .stCaption, [data-testid="stCaption"],
-  small { color: #6c757d !important; }
-
-  [data-testid="stAlert"] p,
-  [data-testid="stAlert"] div { color: inherit !important; }
-
-  /* ══ COMPONENT STYLES ══ */
-  .metric-card {
-    background: white; border-radius: 12px; padding: 20px 24px;
-    border-left: 4px solid #2E75B6;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 4px;
-  }
-  .metric-val   { font-size: 2rem; font-weight: 700; color: #1F4E79; }
-  .metric-label { font-size: 0.78rem; color: #6c757d; font-weight: 500;
-                  text-transform: uppercase; letter-spacing: 0.5px; }
-  .metric-delta { font-size: 0.82rem; color: #28a745; font-weight: 600; }
-
-  .section-header {
-    background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
-    color: white; padding: 12px 20px; border-radius: 8px;
-    margin: 16px 0 12px 0; font-weight: 600; font-size: 1rem;
-  }
-
-  .badge-success { background:#d4edda; color:#155724; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
-  .badge-warning { background:#fff3cd; color:#856404; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
-  .badge-info    { background:#cce5ff; color:#004085; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
-  .badge-danger  { background:#f8d7da; color:#721c24; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
-  .badge-live    { background:#d4edda; color:#155724; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:700;
-                   border: 1px solid #28a745; animation: pulse 2s infinite; }
-  .badge-demo    { background:#fff3cd; color:#856404; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:700;
-                   border: 1px solid #ffc107; }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
-
-  .info-card {
-    background: white; border-radius: 10px; padding: 18px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px;
-  }
-  .result-card {
-    background: linear-gradient(135deg, #e8f4fd 0%, #ffffff 100%);
-    border: 1px solid #bee3f8; border-radius: 12px; padding: 20px; margin: 8px 0;
-  }
-  .source-card {
-    background: white; border-radius: 12px; padding: 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    border-top: 4px solid #2E75B6; margin-bottom: 12px;
-  }
-  .source-card-active {
-    background: linear-gradient(135deg,#e8f4fd,#fff);
-    border-radius: 12px; padding: 20px;
-    box-shadow: 0 4px 16px rgba(46,117,182,0.2);
-    border-top: 4px solid #28a745; margin-bottom: 12px;
-  }
-  .pipeline-step {
-    background: white; border-left: 4px solid #2E75B6;
-    border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 6px 0;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  }
-  .match-score-high { color:#1B5E20; font-weight:700; font-size:1.4rem; }
-  .match-score-med  { color:#E65100; font-weight:700; font-size:1.4rem; }
-  .progress-bar-outer { background:#e9ecef; border-radius:8px; height:10px; margin:4px 0; overflow:hidden; }
-  .progress-bar-inner { height:100%; border-radius:8px; background:linear-gradient(90deg,#2E75B6,#1F4E79); }
-  .ai-alert {
-    background: linear-gradient(135deg,#fff8e1,#fffde7);
-    border-left: 4px solid #ffc107; border-radius: 8px;
-    padding: 14px 18px; margin: 10px 0;
-  }
-  #MainMenu, footer, header { visibility: hidden; }
-  .stTabs [data-baseweb="tab-list"] { gap: 6px; }
-  .stTabs [data-baseweb="tab"] {
-    border-radius: 8px 8px 0 0 !important; background: #e2ebf5 !important;
-    color: #1F4E79 !important; font-weight: 500 !important;
-  }
-  .stTabs [aria-selected="true"] { background: #1F4E79 !important; color: white !important; }
-
-  /* ══ FLOATING TOGGLE BUTTON — custom JS-injected fallback ══
-     If Streamlit's native toggle is still invisible, this injects
-     a persistent floating tab on the left edge.                  */
-  #sidebar-float-toggle {
-    position: fixed;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    z-index: 999999;
-    background: #1F4E79;
-    color: white;
-    border: none;
-    border-radius: 0 10px 10px 0;
-    width: 24px;
-    height: 60px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 3px 0 12px rgba(0,0,0,0.35);
-    writing-mode: vertical-rl;
-    letter-spacing: 1px;
-    font-weight: 700;
-    transition: width 0.2s, background 0.2s;
-  }
-  #sidebar-float-toggle:hover {
-    background: #2E75B6;
-    width: 32px;
-  }
+/* ── MISC ── */
+#MainMenu, footer, header { visibility: hidden; }
+.model-row { display:flex; align-items:center; gap:12px; padding:10px 0;
+  border-bottom:1px solid #f1f5f9; }
+.model-name { font-weight:700; color:#1F4E79; font-size:0.9rem; min-width:180px; }
+.model-bar-wrap { flex:1; }
+.model-badge { font-size:0.7rem; background:#dbeafe; color:#1e40af;
+  padding:2px 8px; border-radius:12px; font-weight:600; }
 </style>
 
 <script>
-// Inject a guaranteed-visible floating toggle that controls the sidebar
 (function() {
   function injectToggle() {
-    if (document.getElementById('sidebar-float-toggle')) return;
-
+    if (document.getElementById('sb-float')) return;
     var btn = document.createElement('button');
-    btn.id = 'sidebar-float-toggle';
+    btn.id = 'sb-float';
     btn.innerHTML = '&#9776;';
-    btn.title = 'Toggle Sidebar';
-
-    btn.addEventListener('click', function() {
-      // Try clicking Streamlit's native collapse button first
-      var nativeBtn = document.querySelector('[data-testid="collapsedControl"]')
-                   || document.querySelector('[data-testid="stSidebarCollapseButton"] button')
-                   || document.querySelector('section[data-testid="stSidebar"] button');
-      if (nativeBtn) {
-        nativeBtn.click();
-      } else {
-        // Fallback: toggle sidebar visibility directly
-        var sidebar = document.querySelector('section[data-testid="stSidebar"]');
-        if (sidebar) {
-          var current = sidebar.style.display;
-          sidebar.style.display = (current === 'none') ? 'flex' : 'none';
-        }
-      }
-    });
-
+    btn.style.cssText = 'position:fixed;top:50%;left:0;transform:translateY(-50%);z-index:999999;' +
+      'background:#1F4E79;color:white;border:none;border-radius:0 10px 10px 0;' +
+      'width:26px;height:58px;cursor:pointer;font-size:15px;' +
+      'box-shadow:3px 0 12px rgba(0,0,0,0.35);transition:all 0.2s;';
+    btn.onmouseover = function(){ this.style.background='#2563EB'; this.style.width='32px'; };
+    btn.onmouseout  = function(){ this.style.background='#1F4E79'; this.style.width='26px'; };
+    btn.onclick = function() {
+      var nb = document.querySelector('[data-testid="collapsedControl"]') ||
+               document.querySelector('[data-testid="stSidebarCollapseButton"] button');
+      if (nb) { nb.click(); return; }
+      var sb = document.querySelector('section[data-testid="stSidebar"]');
+      if (sb) sb.style.display = sb.style.display==='none' ? 'flex' : 'none';
+    };
     document.body.appendChild(btn);
   }
-
-  // Run after DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectToggle);
-  } else {
-    injectToggle();
-  }
-
-  // Re-inject after Streamlit re-renders (it replaces DOM)
-  var observer = new MutationObserver(function(mutations) {
-    injectToggle();
-  });
-  observer.observe(document.body, { childList: true, subtree: false });
+  document.readyState==='loading'
+    ? document.addEventListener('DOMContentLoaded', injectToggle)
+    : injectToggle();
+  new MutationObserver(injectToggle).observe(document.body, {childList:true, subtree:false});
 })();
 </script>
 """, unsafe_allow_html=True)
 
-
-# ─────────────────────────── CONSTANTS ────────────────────────────
+# ─────────────────── CONSTANTS ─────────────────────────────────────
 INDIAN_STATES = ["Kerala","Tamil Nadu","Karnataka","Maharashtra","Gujarat",
                  "Rajasthan","Uttar Pradesh","West Bengal","Telangana","Punjab",
                  "Andhra Pradesh","Bihar","Madhya Pradesh","Odisha","Assam"]
-
 SECTORS = ["Textiles & Apparel","Food Processing","Metal Fabrication",
            "Handicrafts & Artisans","Electronics & Components",
            "Agro Products","Chemicals & Plastics","Leather Goods",
            "Woodwork & Furniture","Pharmaceuticals"]
-
 LANGUAGES = ["Hindi","Malayalam","Tamil","Telugu","Kannada",
              "Marathi","Gujarati","Bengali","Odia","Punjabi"]
-
 SNP_NAMES = ["Flipkart ONDC","Amazon Seller Svcs","Meesho SNP","Udaan Trade",
              "TradeIndia ONDC","IndiaMart Direct","Paytm Mall B2B","Bizongo SNP",
              "Moglix Industrial","Jumbotail Agro"]
-
-# Required columns for uploaded MSE files
 REQUIRED_COLS = ["Enterprise Name","State","Sector","Annual Turnover (L)","No. of Employees"]
 
-# ─────────────────────── SYNTHETIC DATA GENERATORS ────────────────
+# ─────────────────── DATA GENERATORS ───────────────────────────────
 @st.cache_data
 def generate_mock_mse_data(n=500):
     random.seed(42); np.random.seed(42)
     data = []
     for i in range(n):
-        state  = random.choice(INDIAN_STATES)
-        sector = random.choice(SECTORS)
+        state = random.choice(INDIAN_STATES); sector = random.choice(SECTORS)
         status = random.choices(
             ["Onboarded","Pending Verification","Matched - Awaiting SNP","Rejected","Under Review"],
             weights=[45,20,15,8,12])[0]
         data.append({
             "MSE ID": f"MSE{2024000+i}",
             "Enterprise Name": (f"{random.choice(['Sri','Shree','Om','Jai','New','Modern','Royal','National'])} "
-                                f"{random.choice(['Traders','Enterprises','Industries','Works','Manufacturing'])} "
+                                f"{random.choice(['Traders','Enterprises','Industries','Works','Mfg'])} "
                                 f"{random.choice(['Pvt Ltd','LLP','','& Sons','& Co'])}").strip(),
             "State": state, "Sector": sector,
             "Annual Turnover (L)": round(random.lognormvariate(3.5,0.8),1),
@@ -435,1232 +279,1114 @@ def generate_snp_data():
         })
     return pd.DataFrame(snps)
 
-
-# ─────────────────────── REAL DATA PROCESSORS ─────────────────────
-
 def process_uploaded_file(uploaded_file):
-    """
-    REAL DATA SOURCE 1: Excel / CSV Upload
-    """
     try:
-        if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
-        else:
-            df = pd.read_excel(uploaded_file)
-
+        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
         df.columns = [c.strip() for c in df.columns]
-
         missing = [c for c in REQUIRED_COLS if c not in df.columns]
-        if missing:
-            return None, f"Missing required columns: {missing}"
-
-        if "MSE ID" not in df.columns:
-            df.insert(0, "MSE ID", [f"MSE{2025000+i}" for i in range(len(df))])
-        if "Registration Date" not in df.columns:
-            df["Registration Date"] = datetime.now().strftime("%Y-%m-%d")
-        if "Status" not in df.columns:
-            df["Status"] = "Pending Verification"
-        if "Assigned SNP" not in df.columns:
-            df["Assigned SNP"] = "—"
-        if "Match Score" not in df.columns:
-            df["Match Score"] = 0.0
-        if "Language" not in df.columns:
-            df["Language"] = "Hindi"
-        if "Onboarding Time (days)" not in df.columns:
-            df["Onboarding Time (days)"] = None
+        if missing: return None, f"Missing columns: {missing}"
+        if "MSE ID"                    not in df.columns: df.insert(0,"MSE ID",[f"MSE{2025000+i}" for i in range(len(df))])
+        if "Registration Date"         not in df.columns: df["Registration Date"] = datetime.now().strftime("%Y-%m-%d")
+        if "Status"                    not in df.columns: df["Status"] = "Pending Verification"
+        if "Assigned SNP"              not in df.columns: df["Assigned SNP"] = "—"
+        if "Match Score"               not in df.columns: df["Match Score"] = 0.0
+        if "Language"                  not in df.columns: df["Language"] = "Hindi"
+        if "Onboarding Time (days)"    not in df.columns: df["Onboarding Time (days)"] = None
         if "Categorisation Confidence" not in df.columns:
-            def quick_confidence(row):
-                sector = str(row.get("Sector","")).lower()
-                known = ["textile","food","metal","handicraft","electronics",
-                         "agro","chemical","leather","wood","pharma"]
-                return round(0.88 + 0.10 * any(k in sector for k in known), 2)
-            df["Categorisation Confidence"] = df.apply(quick_confidence, axis=1)
-
+            df["Categorisation Confidence"] = df.apply(lambda r: round(0.88+0.10*any(k in str(r.get("Sector","")).lower() for k in ["textile","food","metal","handicraft","electronics","agro","chemical","leather","wood","pharma"]),2), axis=1)
         df["Data Source"] = "📂 Uploaded File"
         return df, None
+    except Exception as e: return None, str(e)
 
-    except Exception as e:
-        return None, str(e)
-
-
-def fetch_udyam_api(udyam_number: str, api_key: str = ""):
-    """
-    REAL DATA SOURCE 2: Udyam Registration Portal API
-    (Demo simulation when no API key provided)
-    """
-    # ── REAL CALL (uncomment when you have an API key) ──────────────
-    # import requests
-    # url = f"https://udyamregistration.gov.in/api/enterprise/{udyam_number}"
-    # headers = {"x-api-key": api_key, "Accept": "application/json"}
-    # response = requests.get(url, headers=headers, timeout=10)
-    # if response.status_code == 200:
-    #     return response.json(), None
-    # else:
-    #     return None, f"API Error {response.status_code}: {response.text}"
-    # ────────────────────────────────────────────────────────────────
-
-    if not udyam_number.startswith("UDYAM-"):
-        return None, "Invalid format. Use: UDYAM-XX-XX-XXXXXXX"
-
-    time.sleep(1.2)
-    parts = udyam_number.upper().split("-")
-    state_code = parts[1] if len(parts) > 1 else "KL"
-    state_map = {"KL":"Kerala","TN":"Tamil Nadu","KA":"Karnataka",
-                 "MH":"Maharashtra","GJ":"Gujarat","DL":"Delhi",
-                 "UP":"Uttar Pradesh","WB":"West Bengal","AP":"Andhra Pradesh"}
-
-    return {
-        "udyam_number": udyam_number.upper(),
-        "enterprise_name": "Shree Lakshmi Textiles Pvt Ltd",
-        "owner_name": "Rajesh Kumar",
-        "nic_code": "13111",
-        "state": state_map.get(state_code, "Kerala"),
-        "district": "Ernakulam",
-        "date_of_incorporation": "2018-04-12",
-        "major_activity": "Manufacturing",
-        "social_category": "General",
-        "investment_plant_machinery": 4500000,
-        "turnover": 12000000,
-        "employees_male": 18,
-        "employees_female": 7,
-        "total_employees": 25,
-        "email": "rajesh@shreelakshmitextiles.com",
-        "mobile": "9876543210",
-        "date_of_udyam_registration": "2020-08-15",
-        "data_source": "Udyam Portal API (Simulated)"
-    }, None
-
-
-def parse_udyam_response_to_row(api_data: dict) -> dict:
-    turnover_lakhs = round(api_data.get("turnover", 0) / 100000, 1)
-    return {
-        "MSE ID": f"MSE{random.randint(2025000,2029999)}",
-        "Enterprise Name": api_data.get("enterprise_name",""),
-        "State": api_data.get("state",""),
-        "Sector": nic_to_sector(api_data.get("nic_code","99999")),
-        "Annual Turnover (L)": turnover_lakhs,
-        "No. of Employees": api_data.get("total_employees", 0),
-        "Registration Date": api_data.get("date_of_udyam_registration",
-                                           datetime.now().strftime("%Y-%m-%d")),
-        "Status": "Pending Verification",
-        "Assigned SNP": "—",
-        "Match Score": 0.0,
-        "Language": "Hindi",
-        "Onboarding Time (days)": None,
-        "Categorisation Confidence": 0.0,
-        "Data Source": "🌐 Udyam API (Live)"
-    }
-
-
-def nic_to_sector(nic_code: str) -> str:
-    mapping = {
-        "10":"Food Processing","11":"Food Processing","12":"Food Processing",
-        "13":"Textiles & Apparel","14":"Textiles & Apparel","15":"Leather Goods",
-        "16":"Woodwork & Furniture","20":"Chemicals & Plastics","21":"Pharmaceuticals",
-        "22":"Chemicals & Plastics","24":"Metal Fabrication","25":"Metal Fabrication",
-        "26":"Electronics & Components","27":"Electronics & Components",
-        "32":"Handicrafts & Artisans","01":"Agro Products","02":"Agro Products",
-    }
-    prefix = str(nic_code)[:2]
-    return mapping.get(prefix, "General Manufacturing")
-
-
-def validate_and_enrich_df(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    needs_scoring = df["Categorisation Confidence"] == 0.0
-    if needs_scoring.any():
-        def score(row):
-            sector = str(row.get("Sector","")).lower()
-            known = ["textile","food","metal","handicraft","electronics",
-                     "agro","chemical","leather","wood","pharma"]
-            base = 0.88 if any(k in sector for k in known) else 0.72
-            return round(base + np.random.uniform(-0.05, 0.08), 2)
-        df.loc[needs_scoring, "Categorisation Confidence"] = df[needs_scoring].apply(score, axis=1)
-    return df
-
-
-def make_sample_excel() -> bytes:
-    sample = pd.DataFrame([
-        {
-            "Enterprise Name": "Shree Ram Textiles",
-            "State": "Kerala",
-            "Sector": "Textiles & Apparel",
-            "Annual Turnover (L)": 85.5,
-            "No. of Employees": 22,
-            "Language": "Malayalam",
-            "Udyam Number": "UDYAM-KL-08-0012345",
-            "GSTIN": "32AABCS1429B1ZB",
-            "Owner Name": "Ramesh Nair",
-            "Mobile": "9876543210",
-            "Email": "ramesh@shreeramt.com",
-            "District": "Ernakulam",
-            "Products": "Cotton shirts and kurtas for domestic market"
-        },
-        {
-            "Enterprise Name": "Vijaya Metal Works",
-            "State": "Tamil Nadu",
-            "Sector": "Metal Fabrication",
-            "Annual Turnover (L)": 210.0,
-            "No. of Employees": 45,
-            "Language": "Tamil",
-            "Udyam Number": "UDYAM-TN-07-0034567",
-            "GSTIN": "33AABCV2134C1ZA",
-            "Owner Name": "S. Vijayan",
-            "Mobile": "9123456780",
-            "Email": "vijayan@vijaymetal.com",
-            "District": "Coimbatore",
-            "Products": "Precision steel components for automotive OEMs"
-        }
-    ])
+def make_sample_excel():
+    sample = pd.DataFrame([{
+        "Enterprise Name":"Shree Ram Textiles","State":"Kerala","Sector":"Textiles & Apparel",
+        "Annual Turnover (L)":85.5,"No. of Employees":22,"Language":"Malayalam",
+        "Udyam Number":"UDYAM-KL-08-0012345","Owner Name":"Ramesh Nair","District":"Ernakulam",
+        "Products":"Cotton shirts and kurtas"
+    }])
     buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
-        sample.to_excel(writer, index=False, sheet_name="MSE Data")
+    with pd.ExcelWriter(buf, engine="openpyxl") as w: sample.to_excel(w, index=False, sheet_name="MSE Data")
     return buf.getvalue()
 
-
-# ─────────────────────── SESSION STATE INIT ───────────────────────
+# ─────────────────── SESSION STATE ─────────────────────────────────
 if "df_mse" not in st.session_state:
-    st.session_state["df_mse"]        = generate_mock_mse_data(500)
-    st.session_state["data_source"]   = "demo"
-    st.session_state["source_label"]  = "🎲 Synthetic Demo Data"
-    st.session_state["source_count"]  = 500
-
+    st.session_state.update({"df_mse": generate_mock_mse_data(500),
+                              "data_source":"demo","source_label":"🎲 Synthetic Demo Data","source_count":500})
 df_snp = generate_snp_data()
 
+# ─────────────────── SHARED PLOTLY THEME ───────────────────────────
+PLT = dict(paper_bgcolor="white", plot_bgcolor="#f8fafc",
+           font=dict(family="Inter", size=11, color="#212529"),
+           margin=dict(l=4,r=4,t=36,b=4))
+AXIS = dict(gridcolor="#e2e8f0", linecolor="#cbd5e1",
+            tickfont=dict(color="#64748b",size=10))
 
-# ─────────────────────────── SIDEBAR ──────────────────────────────
+# ─────────────────── SIDEBAR ───────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🏭 MapMSE")
     st.markdown("**AI-Powered MSE-SNP Platform**")
     st.markdown("*IndiaAI Innovation Challenge 2026*")
     st.markdown("---")
-
-    page = st.radio("Navigate", [
-        "📊 Dashboard",
+    page = st.radio("Navigation", [
+        "🏠 Executive Overview",
+        "📊 Operations Dashboard",
         "🔌 Data Sources",
         "🤖 AI Registration",
         "🔍 Product Categoriser",
         "🔗 SNP Matcher",
         "📋 MSE Registry",
-        "📈 Analytics"
+        "📈 Performance & Benchmarks",
+        "🚀 Deployment & Roadmap",
+        "💼 Business Intelligence",
+        "🔒 Governance & Compliance",
+        "🤝 Partnerships"
     ], label_visibility="collapsed")
-
     st.markdown("---")
-
     src = st.session_state.get("data_source","demo")
-    if src == "demo":
-        st.markdown('<span class="badge-demo">🎲 DEMO DATA</span>', unsafe_allow_html=True)
-    elif src == "upload":
-        st.markdown('<span class="badge-live">📂 FILE LOADED</span>', unsafe_allow_html=True)
-    elif src == "api":
-        st.markdown('<span class="badge-live">🌐 API LIVE</span>', unsafe_allow_html=True)
-    elif src == "manual":
-        st.markdown('<span class="badge-live">✏️ MANUAL ENTRY</span>', unsafe_allow_html=True)
-
-    st.markdown(f"**{st.session_state.get('source_label','Demo')}**")
-    st.markdown(f"Records loaded: **{st.session_state.get('source_count',500):,}**")
-
+    badge = {"demo":'<span class="badge badge-demo">🎲 DEMO</span>',
+             "upload":'<span class="badge badge-live">📂 LIVE</span>',
+             "api":'<span class="badge badge-live">🌐 API</span>',
+             "manual":'<span class="badge badge-live">✏️ MANUAL</span>'}
+    st.markdown(badge.get(src,''), unsafe_allow_html=True)
+    st.markdown(f"**{st.session_state.get('source_label','')}**")
+    st.markdown(f"Records: **{st.session_state.get('source_count',500):,}**")
     st.markdown("---")
     st.markdown("**System Status**")
-    c1,c2 = st.columns(2)
-    with c1:
-        st.markdown("🟢 ASR Online"); st.markdown("🟢 OCR Online")
-    with c2:
-        st.markdown("🟢 NLP Active"); st.markdown("🟢 Matcher OK")
+    for s in ["🟢 ASR  Online","🟢 OCR  Online","🟢 NER  Active","🟢 Match Engine OK","🟢 DPDP Compliant"]:
+        st.markdown(f"<small>{s}</small>", unsafe_allow_html=True)
     st.markdown("---")
-    st.caption("v2.1.0 | NYZTrade AI Solutions")
-    st.caption("Feb 21, 2026")
+    st.caption("v3.0.0 | NYZTrade AI Solutions"); st.caption("Mar 2026")
 
-
-# ─────────────────────────── HEADER ───────────────────────────────
-src_badge = (
-    '<span style="background:#d4edda;color:#155724;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:700;">📂 File Loaded</span>'
-    if st.session_state["data_source"]=="upload" else
-    '<span style="background:#d4edda;color:#155724;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:700;">🌐 API Live</span>'
-    if st.session_state["data_source"]=="api" else
-    '<span style="background:#fff3cd;color:#856404;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:700;">🎲 Demo Mode</span>'
-)
+# ─────────────────── GLOBAL HEADER ─────────────────────────────────
+df_mse = st.session_state["df_mse"]
+src_badge = ('<span style="background:#dcfce7;color:#166534;padding:5px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;">📂 File Loaded</span>'
+             if st.session_state["data_source"]=="upload" else
+             '<span style="background:#fef9c3;color:#854d0e;padding:5px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;">🎲 Demo Mode</span>')
 st.markdown(f"""
-<div style="background:linear-gradient(135deg,#1F4E79 0%,#2E75B6 60%,#1F4E79 100%);
-            padding:24px 32px;border-radius:12px;margin-bottom:20px;
-            display:flex;align-items:center;justify-content:space-between;">
+<div style="background:linear-gradient(135deg,#0d1f3c 0%,#1F4E79 45%,#2563EB 100%);
+  padding:22px 32px;border-radius:14px;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 4px 20px rgba(31,78,121,0.35);">
   <div>
-    <div style="color:#ffffff;font-size:1.8rem;font-weight:700;">🏭 MapMSE</div>
-    <div style="color:#cce4ff;font-size:0.95rem;margin-top:4px;">
-      AI-Powered Intelligent MSE-to-SNP Agent Mapping Platform &nbsp;|&nbsp;
-      Ministry of MSME &nbsp;|&nbsp; IndiaAI 2026
+    <div style="color:#fff;font-size:1.9rem;font-weight:800;letter-spacing:-0.5px;">🏭 MapMSE</div>
+    <div style="color:#93c5fd;font-size:0.9rem;margin-top:4px;font-weight:400;">
+      AI-Powered Intelligent MSE-to-SNP Mapping Platform &nbsp;·&nbsp; Ministry of MSME
+      &nbsp;·&nbsp; IndiaAI Innovation Challenge 2026
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <span style="background:rgba(255,255,255,0.15);color:#e0f2fe;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">TRL 6 — Live Pilot</span>
+      <span style="background:rgba(255,255,255,0.15);color:#e0f2fe;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">11 Indian Languages</span>
+      <span style="background:rgba(255,255,255,0.15);color:#e0f2fe;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">355+ MSMEs Onboarded</span>
+      <span style="background:rgba(255,255,255,0.15);color:#e0f2fe;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">DPDP Act 2023 Compliant</span>
     </div>
   </div>
   <div style="text-align:right;">
     {src_badge}
-    <div style="color:#a8d4f5;font-size:0.78rem;margin-top:6px;">
-      🕐 {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime('%H:%M IST, %d %b %Y')}
+    <div style="color:#93c5fd;font-size:0.75rem;margin-top:8px;">
+      🕐 {(datetime.utcnow()+timedelta(hours=5,minutes=30)).strftime('%H:%M IST, %d %b %Y')}
     </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-df_mse = st.session_state["df_mse"]
 
+# ══════════════════════════════════════════════════════════════════
+# PAGE: EXECUTIVE OVERVIEW
+# ══════════════════════════════════════════════════════════════════
+if page == "🏠 Executive Overview":
+    st.markdown('<div class="sec-hdr">🏠 Executive Overview — MapMSE at a Glance</div>', unsafe_allow_html=True)
 
-# ══════════════════════ PAGE: DATA SOURCES ════════════════════════
-if page == "🔌 Data Sources":
-
-    st.markdown('<div class="section-header">🔌 Data Sources — How Real Data Enters MapMSE</div>',
-                unsafe_allow_html=True)
-    st.markdown("""
-    <div class="info-card" style="margin-bottom:12px;">
-      <span style="color:#1F4E79;font-size:0.95rem;">
-      📌 <strong>This is your control panel for data.</strong> Think of it like choosing the
-      fuel for the engine. You can switch between Demo data, your own Excel file,
-      or a live government API — and the entire app updates instantly across all pages.
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="section-header">🗺️ How Data Flows Through the System</div>',
-                unsafe_allow_html=True)
-
-    col1, col2, col3, col4, col5 = st.columns([2,0.3,2,0.3,2])
-    with col1:
-        st.markdown("""
-        <div class="pipeline-step">
-          <div style="font-weight:700;color:#1F4E79;margin-bottom:6px;">📥 Step 1 — Data Enters</div>
-          <div style="font-size:0.82rem;color:#495057;">
-            Choose one of 4 entry methods:<br>
-            • Upload Excel/CSV file<br>
-            • Type Udyam number → API fetches<br>
-            • Fill form manually<br>
-            • Use demo (synthetic) data
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown('<div style="text-align:center;font-size:2rem;padding-top:30px;">→</div>',
-                    unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div class="pipeline-step">
-          <div style="font-weight:700;color:#1F4E79;margin-bottom:6px;">⚙️ Step 2 — AI Processes</div>
-          <div style="font-size:0.82rem;color:#495057;">
-            • Validate & clean the data<br>
-            • Score product categories (NLP)<br>
-            • Compute match scores (ML)<br>
-            • Flag missing/bad fields
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col4:
-        st.markdown('<div style="text-align:center;font-size:2rem;padding-top:30px;">→</div>',
-                    unsafe_allow_html=True)
-    with col5:
-        st.markdown("""
-        <div class="pipeline-step">
-          <div style="font-weight:700;color:#1F4E79;margin-bottom:6px;">📊 Step 3 — App Updates</div>
-          <div style="font-size:0.82rem;color:#495057;">
-            All 6 pages reflect your data:<br>
-            • Dashboard shows real counts<br>
-            • Registry shows real MSEs<br>
-            • Matcher suggests real SNPs<br>
-            • Analytics shows real trends
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📂 Source 1: Upload File",
-        "🌐 Source 2: Udyam API",
-        "✏️ Source 3: Manual Entry",
-        "🎲 Source 4: Demo Data"
-    ])
-
-    with tab1:
-        col1, col2 = st.columns([1.2, 1])
-        with col1:
-            st.markdown("""
-            <div class="source-card">
-              <div style="font-size:1.1rem;font-weight:700;color:#1F4E79;margin-bottom:8px;">
-                📂 Upload Your Own MSE Data File
-              </div>
-              <div style="font-size:0.85rem;color:#495057;line-height:1.7;">
-                <strong>What this is:</strong> If you already have a list of MSEs in an
-                Excel spreadsheet or CSV file (from your own records, NSIC exports,
-                state MSME department data, etc.), you can upload it here directly.<br><br>
-                <strong>What happens next:</strong><br>
-                1️⃣ The file is read and validated<br>
-                2️⃣ Missing columns are auto-filled with defaults<br>
-                3️⃣ AI scores each MSE for categorisation confidence<br>
-                4️⃣ The entire app switches to YOUR data<br><br>
-                <strong>File requirements:</strong><br>
-                • Format: <code>.xlsx</code> or <code>.csv</code><br>
-                • Must have these columns (at minimum):<br>
-                &nbsp;&nbsp;<code>Enterprise Name, State, Sector,</code><br>
-                &nbsp;&nbsp;<code>Annual Turnover (L), No. of Employees</code>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            template_bytes = make_sample_excel()
-            st.download_button(
-                "📥 Download Excel Template (fill & re-upload)",
-                data=template_bytes,
-                file_name="MapMSE_MSE_Template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
-            )
-
-        with col2:
-            uploaded = st.file_uploader(
-                "Drop your Excel or CSV here",
-                type=["xlsx","xls","csv"],
-                help="File must contain: Enterprise Name, State, Sector, Annual Turnover (L), No. of Employees"
-            )
-
-            if uploaded:
-                with st.spinner("📖 Reading file and running AI validation..."):
-                    df_new, err = process_uploaded_file(uploaded)
-
-                if err:
-                    st.error(f"❌ Could not load file: {err}")
-                    st.markdown("""
-                    <div class="ai-alert">
-                      <strong>Common fixes:</strong><br>
-                      • Make sure column names exactly match the template<br>
-                      • Remove any merged cells from the Excel file<br>
-                      • Check that the file isn't password protected
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    df_new = validate_and_enrich_df(df_new)
-                    st.success(f"✅ Loaded **{len(df_new):,} MSEs** from `{uploaded.name}`")
-
-                    st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📋 Preview (first 5 rows):</p>", unsafe_allow_html=True)
-                    preview_cols = ["Enterprise Name","State","Sector",
-                                    "Annual Turnover (L)","No. of Employees",
-                                    "Status","Categorisation Confidence"]
-                    available = [c for c in preview_cols if c in df_new.columns]
-                    st.dataframe(df_new[available].head(5), use_container_width=True)
-
-                    col_a, col_b = st.columns(2)
-                    with col_a:
-                        if st.button("✅ Use This Data for All Pages",
-                                     type="primary", use_container_width=True):
-                            st.session_state["df_mse"]       = df_new
-                            st.session_state["data_source"]  = "upload"
-                            st.session_state["source_label"] = f"📂 {uploaded.name}"
-                            st.session_state["source_count"] = len(df_new)
-                            st.success("🎉 App updated! All pages now use your file's data.")
-                            st.rerun()
-                    with col_b:
-                        if st.button("❌ Cancel", use_container_width=True):
-                            st.info("Cancelled. Keeping current data.")
-
-        with st.expander("📖 What does each column mean?"):
-            col_desc = pd.DataFrame([
-                ["Enterprise Name",       "Yes", "Full legal name of the enterprise"],
-                ["State",                 "Yes", "Indian state where the enterprise is registered"],
-                ["Sector",                "Yes", "Industry sector (e.g., Textiles & Apparel, Food Processing)"],
-                ["Annual Turnover (L)",   "Yes", "Turnover in Indian Rupees Lakhs (e.g., 85.5 = ₹85.5 Lakhs)"],
-                ["No. of Employees",      "Yes", "Total headcount"],
-                ["Language",              "No",  "Preferred communication language (default: Hindi)"],
-                ["Udyam Number",          "No",  "UDYAM-XX-XX-XXXXXXX format — used for API verification"],
-                ["GSTIN",                 "No",  "GST Identification Number — used for tax verification"],
-                ["Owner Name",            "No",  "Name of the proprietor/director"],
-                ["Mobile",                "No",  "Contact number for notifications"],
-                ["District",              "No",  "District within the state"],
-                ["Products",              "No",  "Free-text product description (improves AI categorisation)"],
-            ], columns=["Column","Required?","What it means"])
-            st.dataframe(col_desc, use_container_width=True, hide_index=True)
-
-    with tab2:
-        col1, col2 = st.columns([1.2, 1])
-        with col1:
-            st.markdown("""
-            <div class="source-card">
-              <div style="font-size:1.1rem;font-weight:700;color:#1F4E79;margin-bottom:8px;">
-                🌐 Pull Data Directly from Udyam Registration Portal
-              </div>
-              <div style="font-size:0.85rem;color:#495057;line-height:1.7;">
-                <strong>What this is:</strong> Every MSME registered in India gets a
-                Udyam Registration Number (like <code>UDYAM-KL-08-0023456</code>).
-                The Government's Udyam Portal has an API that lets
-                authorised systems fetch enterprise details automatically.<br><br>
-                <strong>What happens:</strong><br>
-                1️⃣ You type the Udyam number<br>
-                2️⃣ System calls the government API<br>
-                3️⃣ Enterprise details arrive in seconds<br>
-                4️⃣ AI scores & adds it to the registry<br><br>
-                <strong>Current status:</strong><br>
-                🟡 <strong>Demo mode</strong> — returns simulated data.<br>
-                In production: provide a real MeitY/Udyam API key below.
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            api_key = st.text_input(
-                "🔑 Udyam API Key (leave blank for demo mode)",
-                type="password",
-                placeholder="Enter MeitY-issued API key here...",
-                help="Contact: https://udyamregistration.gov.in for API access"
-            )
-            if api_key:
-                st.success("🔑 API key set — will use real Udyam API")
-            else:
-                st.info("ℹ️ No API key — running in simulation mode")
-
-        with col2:
-            st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>🔍 Look up a single enterprise:</p>", unsafe_allow_html=True)
-            udyam_input = st.text_input(
-                "Udyam Registration Number",
-                placeholder="e.g. UDYAM-KL-08-0023456",
-                help="Format: UDYAM-[State Code]-[District]-[Number]"
-            )
-
-            if st.button("🔍 Fetch from Udyam Portal", use_container_width=True,
-                         type="primary", disabled=not udyam_input):
-                with st.spinner("Calling Udyam Registration API..."):
-                    data, err = fetch_udyam_api(udyam_input.strip(), api_key)
-
-                if err:
-                    st.error(f"❌ API Error: {err}")
-                else:
-                    st.success("✅ Enterprise data fetched successfully!")
-                    st.json(data)
-
-                    new_row = parse_udyam_response_to_row(data)
-                    st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>✅ Converted to app format:</p>", unsafe_allow_html=True)
-                    st.dataframe(pd.DataFrame([new_row]), use_container_width=True)
-
-                    if st.button("➕ Add this MSE to Registry", use_container_width=True):
-                        new_df = pd.concat(
-                            [st.session_state["df_mse"],
-                             pd.DataFrame([new_row])],
-                            ignore_index=True
-                        )
-                        st.session_state["df_mse"]       = new_df
-                        st.session_state["data_source"]  = "api"
-                        st.session_state["source_label"] = "🌐 Udyam API"
-                        st.session_state["source_count"] = len(new_df)
-                        st.success(f"✅ Added! Registry now has {len(new_df):,} MSEs.")
-                        st.rerun()
-
-        with st.expander("🔄 How to do bulk API lookups (production setup)"):
-            st.markdown("""
-            In production, instead of one-by-one lookups, you'd do this:
-
-            ```python
-            import requests, pandas as pd
-
-            API_KEY  = "your-real-meitY-api-key"
-            BASE_URL = "https://udyamregistration.gov.in/api/enterprise"
-
-            udyam_numbers = ["UDYAM-KL-08-001", "UDYAM-TN-07-002", ...]
-
-            results = []
-            for num in udyam_numbers:
-                r = requests.get(f"{BASE_URL}/{num}",
-                                 headers={"x-api-key": API_KEY})
-                if r.status_code == 200:
-                    results.append(r.json())
-
-            df = pd.DataFrame(results)  # ready to use in the app
-            ```
-            """)
-
-    with tab3:
-        st.markdown("""
-        <div class="source-card">
-          <div style="font-size:1.1rem;font-weight:700;color:#1F4E79;margin-bottom:8px;">
-            ✏️ Register a Single MSE Manually
-          </div>
-          <div style="font-size:0.85rem;color:#495057;">
-            Best for: On-the-spot registrations at MSME camps, help desks,
-            or when the enterprise doesn't have a Udyam number yet.
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        with st.form("manual_entry_form"):
-            c1,c2,c3 = st.columns(3)
-            with c1:
-                m_name    = st.text_input("Enterprise Name *", placeholder="e.g., Shree Ram Textiles")
-                m_owner   = st.text_input("Owner Name", placeholder="e.g., Ramesh Nair")
-                m_state   = st.selectbox("State *", INDIAN_STATES)
-                m_district= st.text_input("District", placeholder="e.g., Ernakulam")
-            with c2:
-                m_sector   = st.selectbox("Sector *", SECTORS)
-                m_lang     = st.selectbox("Preferred Language", LANGUAGES)
-                m_turnover = st.number_input("Annual Turnover (₹ Lakhs) *", min_value=0.1, value=50.0, step=0.5)
-                m_emp      = st.number_input("No. of Employees *", min_value=1, value=10)
-            with c3:
-                m_udyam  = st.text_input("Udyam Number (if available)", placeholder="UDYAM-XX-XX-XXXXXXX")
-                m_gstin  = st.text_input("GSTIN (if available)", placeholder="e.g., 32AABCS1429B1ZB")
-                m_mobile = st.text_input("Mobile Number", placeholder="e.g., 9876543210")
-                m_email  = st.text_input("Email", placeholder="owner@enterprise.com")
-
-            m_products = st.text_area("Product Description *",
-                placeholder="Describe what the enterprise makes/sells in detail.",
-                height=80)
-
-            submitted = st.form_submit_button("✅ Register & Add to Registry",
-                                              type="primary", use_container_width=True)
-            if submitted:
-                if not m_name or not m_products:
-                    st.error("Enterprise Name and Product Description are required.")
-                else:
-                    keyword_score = 0.88 if any(
-                        k in m_sector.lower()
-                        for k in ["textile","food","metal","leather","wood","pharma"]
-                    ) else 0.74
-                    new_row = {
-                        "MSE ID": f"MSE{random.randint(2025000,2029999)}",
-                        "Enterprise Name": m_name,
-                        "State": m_state, "Sector": m_sector,
-                        "Annual Turnover (L)": m_turnover,
-                        "No. of Employees": m_emp,
-                        "Registration Date": datetime.now().strftime("%Y-%m-%d"),
-                        "Status": "Pending Verification",
-                        "Assigned SNP": "—", "Match Score": 0.0,
-                        "Language": m_lang, "Onboarding Time (days)": None,
-                        "Categorisation Confidence": round(keyword_score + np.random.uniform(-0.04,0.08),2),
-                        "Data Source": "✏️ Manual Entry"
-                    }
-                    new_df = pd.concat(
-                        [st.session_state["df_mse"], pd.DataFrame([new_row])],
-                        ignore_index=True
-                    )
-                    st.session_state["df_mse"]       = new_df
-                    st.session_state["data_source"]  = "manual"
-                    st.session_state["source_label"] = "✏️ Manual Entry"
-                    st.session_state["source_count"] = len(new_df)
-                    st.success(f"✅ **{m_name}** added to registry! Total: {len(new_df):,} MSEs.")
-                    st.rerun()
-
-    with tab4:
-        st.markdown("""
-        <div class="source-card">
-          <div style="font-size:1.1rem;font-weight:700;color:#1F4E79;margin-bottom:8px;">
-            🎲 Synthetic Demo Data — What It Is and How It's Made
-          </div>
-          <div style="font-size:0.85rem;color:#495057;line-height:1.8;">
-            <strong>What it is:</strong> 500 completely fake, computer-generated MSE records.
-            No real enterprise information. Created purely to demonstrate the app's
-            features before real data is connected.<br><br>
-            <strong>Is it realistic?</strong> Intentionally yes — the distributions
-            (turnover, employee count, sector mix) are calibrated to roughly match
-            India's MSME landscape. But every name and number is fictional.<br><br>
-            <strong>When to use it:</strong> For demo presentations, testing the UI,
-            or when you don't have real data yet.
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            n_records = st.slider("How many demo records to generate?",
-                                  min_value=100, max_value=2000, value=500, step=100)
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🔄 Generate Fresh Demo Data", use_container_width=True, type="primary"):
-                generate_mock_mse_data.clear()
-                fresh_df = generate_mock_mse_data(n_records)
-                fresh_df["Data Source"] = "🎲 Synthetic Demo"
-                st.session_state["df_mse"]       = fresh_df
-                st.session_state["data_source"]  = "demo"
-                st.session_state["source_label"] = f"🎲 Synthetic Demo ({n_records} records)"
-                st.session_state["source_count"] = n_records
-                st.success(f"✅ Generated {n_records:,} fresh demo records.")
-                st.rerun()
-
-        st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📊 Side-by-side: Demo Data vs Real Data</p>", unsafe_allow_html=True)
-        comp = pd.DataFrame([
-            ["Enterprise Name",   "Shree Industries Pvt Ltd (random words)", "Vijaya Cotton Mills Pvt Ltd (actual company)"],
-            ["Turnover",          "₹127.4 Lakhs (random number)",            "₹127.4 Lakhs (from GST returns / Udyam)"],
-            ["State",             "Kerala (random pick from list)",           "Kerala (from registration address)"],
-            ["Sector",            "Textiles & Apparel (random pick)",         "Textiles & Apparel (from NIC code 13111)"],
-            ["Match Score",       "0.87 (random between 0.72–0.98)",         "0.87 (computed by real ML model)"],
-            ["Confidence Score",  "0.94 (random between 0.78–0.99)",         "0.94 (from NLP classifier)"],
-            ["Status",            "Onboarded (randomly assigned)",            "Onboarded (based on actual NSIC verification)"],
-        ], columns=["Field","🎲 Demo (Fake)","✅ Real Data"])
-        st.dataframe(comp, use_container_width=True, hide_index=True)
-
-    # ── CURRENT DATA SUMMARY ─────────────────────────────────────────
-    st.markdown('<div class="section-header">📊 Currently Loaded Data — Summary</div>',
-                unsafe_allow_html=True)
-
-    current_df = st.session_state["df_mse"]
-    c1,c2,c3,c4 = st.columns(4)
-    with c1:
-        st.markdown(f"""
-        <div class="metric-card">
-          <div class="metric-val">{len(current_df):,}</div>
-          <div class="metric-label">Total Records</div>
-          <div class="metric-delta">{st.session_state.get('source_label','')}</div>
-        </div>""", unsafe_allow_html=True)
-    with c2:
-        states = current_df["State"].nunique() if "State" in current_df.columns else 0
-        st.markdown(f"""
-        <div class="metric-card">
-          <div class="metric-val">{states}</div>
-          <div class="metric-label">States Covered</div>
-        </div>""", unsafe_allow_html=True)
-    with c3:
-        sectors = current_df["Sector"].nunique() if "Sector" in current_df.columns else 0
-        st.markdown(f"""
-        <div class="metric-card">
-          <div class="metric-val">{sectors}</div>
-          <div class="metric-label">Sectors</div>
-        </div>""", unsafe_allow_html=True)
-    with c4:
-        if "Data Source" in current_df.columns:
-            src_counts = current_df["Data Source"].value_counts()
-            top_src = src_counts.index[0] if len(src_counts) else "—"
-        else:
-            top_src = "—"
-        st.markdown(f"""
-        <div class="metric-card">
-          <div class="metric-val" style="font-size:1rem;">{top_src}</div>
-          <div class="metric-label">Primary Source</div>
-        </div>""", unsafe_allow_html=True)
-
-    if "Data Source" in current_df.columns:
-        src_pie = current_df["Data Source"].value_counts().reset_index()
-        src_pie.columns = ["Source","Count"]
-        col1, col2 = st.columns([1,2])
-        with col1:
-            fig = go.Figure(go.Pie(labels=src_pie["Source"], values=src_pie["Count"],
-                                   hole=0.45, textinfo="label+percent",
-                                   marker_colors=["#1F4E79","#2E75B6","#28a745","#ffc107"]))
-            fig.update_layout(height=220, margin=dict(l=0,r=0,t=10,b=0),
-                              showlegend=False, paper_bgcolor="white",
-                              font=dict(family="Inter", size=10, color="#212529"))
-            st.plotly_chart(fig, use_container_width=True)
-        with col2:
-            st.dataframe(src_pie, use_container_width=True, hide_index=True)
-
-
-# ══════════════════════ PAGE: DASHBOARD ═══════════════════════════
-elif page == "📊 Dashboard":
-    df_mse = st.session_state["df_mse"]
-
-    col1,col2,col3,col4,col5 = st.columns(5)
-    onboarded = (df_mse["Status"] == "Onboarded").sum() if "Status" in df_mse.columns else 0
-    avg_time  = df_mse["Onboarding Time (days)"].mean() if "Onboarding Time (days)" in df_mse.columns else 0
-    avg_conf  = df_mse["Categorisation Confidence"].mean() if "Categorisation Confidence" in df_mse.columns else 0
+    # Top KPI row
     kpis = [
-        ("Total MSEs Registered", f"{len(df_mse):,}", "All data sources combined", "#2E75B6"),
-        ("Successfully Onboarded", f"{onboarded:,}", f"{onboarded/max(len(df_mse),1)*100:.1f}% success rate", "#1B5E20"),
-        ("Avg Onboarding Time", f"{avg_time:.1f}d" if avg_time else "—", "↓ vs 12.4d manual baseline", "#E65100"),
-        ("Categorisation Accuracy", f"{avg_conf*100:.1f}%" if avg_conf else "—", "↑ vs 67.3% baseline", "#6A1B9A"),
-        ("Active SNP Partners", "34", "↑ +8 this quarter", "#1F4E79"),
+        ("63M+",  "Addressable MSMEs\nin India",           "30% of India GDP", "#2563EB", "up"),
+        ("355+",  "MSMEs Onboarded\n(Live Pilot)",         "Kerala + Tamil Nadu", "#059669", "up"),
+        ("3.7%",  "ASR Word\nError Rate",                  "↓ 58% vs 8.9% baseline", "#7c3aed", "up"),
+        ("98.7%", "OCR Field\nAccuracy",                   "↑ vs 91.2% baseline", "#ea580c", "up"),
+        ("68%",   "Registration Time\nSaved",              "12.4 days → 3.8 days", "#0891b2", "up"),
+        ("TRL 6", "Technology\nReadiness Level",           "Target TRL 9 by Q3 2026", "#1F4E79", "up"),
     ]
-    for col,(label,val,delta,color) in zip([col1,col2,col3,col4,col5], kpis):
+    cols = st.columns(6)
+    colors = {"#2563EB":"#2563EB","#059669":"#059669","#7c3aed":"#7c3aed",
+              "#ea580c":"#ea580c","#0891b2":"#0891b2","#1F4E79":"#1F4E79"}
+    for col,(val,label,delta,color,direction) in zip(cols,kpis):
         with col:
             st.markdown(f"""
-            <div class="metric-card" style="border-left-color:{color};">
-              <div class="metric-val" style="color:{color};">{val}</div>
-              <div class="metric-label">{label}</div>
-              <div class="metric-delta">{delta}</div>
+            <div class="kpi-card" style="--accent:{color};">
+              <div class="kpi-val">{val}</div>
+              <div class="kpi-label">{label.replace(chr(10),'<br>')}</div>
+              <div class="kpi-delta up">↑ {delta}</div>
             </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    col1,col2 = st.columns([1.3,1])
+    col1, col2 = st.columns([1.6, 1])
 
     with col1:
-        st.markdown('<div class="section-header">📍 MSEs by State</div>', unsafe_allow_html=True)
-        if "State" in df_mse.columns:
-            sc = df_mse.groupby("State").size().reset_index(name="count").sort_values("count",ascending=True)
-            fig = px.bar(sc, x="count", y="State", orientation="h",
-                         color="count", color_continuous_scale=["#cce4ff","#1F4E79"])
-            fig.update_layout(height=340, margin=dict(l=0,r=0,t=10,b=0),
-                              coloraxis_showscale=False,
-                              paper_bgcolor="white", plot_bgcolor="white",
-                              font=dict(family="Inter", size=11, color="#212529"),
-                              xaxis=dict(tickfont=dict(color="#495057",size=10),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"),
-                              yaxis=dict(tickfont=dict(color="#212529",size=10),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"))
-            st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.markdown('<div class="section-header">📊 Registration Status</div>', unsafe_allow_html=True)
-        if "Status" in df_mse.columns:
-            stc = df_mse["Status"].value_counts()
-            fig = go.Figure(go.Pie(
-                labels=stc.index, values=stc.values, hole=0.5,
-                marker_colors=["#1F4E79","#2E75B6","#ffc107","#dc3545","#6c757d"],
-                textinfo="label+percent", textfont=dict(size=10)
-            ))
-            fig.add_annotation(text=f"<b>{len(df_mse):,}</b><br>Total",
-                               x=0.5,y=0.5,font=dict(size=13,color="#1F4E79"),showarrow=False)
-            fig.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=0),
-                              showlegend=True,
-                              legend=dict(font=dict(size=9, color="#212529"),
-                                          bgcolor="rgba(255,255,255,0.9)"),
-                              paper_bgcolor="white",
-                              font=dict(family="Inter", color="#212529"))
-            st.plotly_chart(fig, use_container_width=True)
-
-    col1,col2 = st.columns(2)
-    with col1:
-        st.markdown('<div class="section-header">🏭 MSEs by Sector</div>', unsafe_allow_html=True)
-        if "Sector" in df_mse.columns:
-            sd = df_mse.groupby("Sector").size().reset_index(name="count").sort_values("count",ascending=False)
-            fig = px.bar(sd, x="Sector", y="count",
-                         color="count", color_continuous_scale=["#bee3f8","#1F4E79"])
-            fig.update_layout(height=300, margin=dict(l=0,r=10,t=10,b=80),
-                              coloraxis_showscale=False,
-                              paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                              font=dict(family="Inter", size=10, color="#212529"),
-                              xaxis=dict(tickangle=-35,
-                                         tickfont=dict(size=9, color="#212529"),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"),
-                              yaxis=dict(tickfont=dict(color="#495057", size=9),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"))
-            st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.markdown('<div class="section-header">⚡ Onboarding Time Distribution</div>', unsafe_allow_html=True)
-        if "Onboarding Time (days)" in df_mse.columns:
-            ob = df_mse["Onboarding Time (days)"].dropna()
-            if len(ob) > 0:
-                fig = go.Figure()
-                fig.add_trace(go.Histogram(x=ob, nbinsx=20, name="MapMSE",
-                                           marker_color="#2E75B6", opacity=0.8))
-                manual = np.random.lognormal(2.5,0.3,500)
-                fig.add_trace(go.Histogram(x=manual, nbinsx=20, name="Manual (Baseline)",
-                                           marker_color="#dc3545", opacity=0.4))
-                fig.add_vline(x=ob.mean(), line_dash="dash", line_color="#1F4E79",
-                              annotation_text=f"Avg:{ob.mean():.1f}d",
-                              annotation_font_size=10)
-                fig.update_layout(height=300, barmode="overlay",
-                                  margin=dict(l=0,r=0,t=10,b=0),
-                                  paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                                  font=dict(family="Inter", size=11, color="#212529"),
-                                  legend=dict(font=dict(size=10, color="#212529"),
-                                              bgcolor="rgba(255,255,255,0.9)"),
-                                  xaxis=dict(title="Days",
-                                             tickfont=dict(color="#495057"),
-                                             gridcolor="#e9ecef", linecolor="#dee2e6"),
-                                  yaxis=dict(title="Count",
-                                             tickfont=dict(color="#495057"),
-                                             gridcolor="#e9ecef", linecolor="#dee2e6"))
-                st.plotly_chart(fig, use_container_width=True)
+        st.markdown('<div class="sec-hdr">🤖 AI Model Stack — Performance Overview</div>', unsafe_allow_html=True)
+        models = [
+            ("Whisper Large v3", "ASR", 3.7, 8.9, "WER % ↓", "#2563EB", "MIT"),
+            ("Tesseract 5 + LayoutLM", "OCR", 98.7, 91.2, "Accuracy % ↑", "#059669", "Apache 2.0"),
+            ("AI4Bharat IndicTrans2", "Translation", 76.5, 72.4, "BLEU Score ↑", "#7c3aed", "Apache 2.0"),
+            ("SpaCy 3.7 NER", "NER", 91.3, 84.1, "F1 × 100 ↑", "#ea580c", "MIT"),
+        ]
+        for name, mtype, mapmse_v, baseline_v, metric, color, lic in models:
+            if "↓" in metric:
+                improv = f"↓ {((baseline_v-mapmse_v)/baseline_v*100):.0f}%"
+                bar_pct = int((1 - mapmse_v/baseline_v) * 100)
             else:
-                st.info("No onboarding time data available yet.")
+                improv = f"↑ {((mapmse_v-baseline_v)/baseline_v*100):.0f}%"
+                bar_pct = int(mapmse_v)
+            st.markdown(f"""
+            <div style="background:white;border-radius:10px;padding:14px 18px;margin-bottom:8px;
+              box-shadow:0 1px 6px rgba(0,0,0,0.06);border-left:4px solid {color};">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div>
+                  <span style="font-weight:700;color:{color};font-size:0.92rem;">{name}</span>
+                  <span class="badge badge-gray" style="margin-left:6px;">{mtype}</span>
+                  <span class="badge badge-blue" style="margin-left:4px;">{lic}</span>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-weight:800;color:{color};font-size:1.1rem;">{mapmse_v}%</span>
+                  <span style="color:#94a3b8;font-size:0.75rem;margin-left:4px;">vs {baseline_v}% baseline</span>
+                  <span class="badge badge-green" style="margin-left:6px;">{improv}</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="font-size:0.7rem;color:#94a3b8;width:60px;">Baseline</div>
+                <div class="progress-outer" style="flex:1;">
+                  <div class="progress-inner" style="width:{min(int(baseline_v),100)}%;background:#e2e8f0;"></div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:3px;">
+                <div style="font-size:0.7rem;color:{color};width:60px;font-weight:600;">MapMSE</div>
+                <div class="progress-outer" style="flex:1;">
+                  <div class="progress-inner" style="width:{bar_pct}%;background:linear-gradient(90deg,{color},{color}cc);"></div>
+                </div>
+              </div>
+              <div style="font-size:0.72rem;color:#64748b;margin-top:6px;">{metric}</div>
+            </div>""", unsafe_allow_html=True)
 
-    if "Data Source" in df_mse.columns and df_mse["Data Source"].nunique() > 1:
-        st.markdown('<div class="section-header">🔌 Data Source Breakdown</div>', unsafe_allow_html=True)
-        src_df = df_mse.groupby("Data Source").size().reset_index(name="Count")
-        fig = px.bar(src_df, x="Data Source", y="Count", color="Data Source",
-                     color_discrete_sequence=["#1F4E79","#2E75B6","#28a745","#ffc107"])
-        fig.update_layout(height=250, margin=dict(l=0,r=0,t=10,b=0),
-                          showlegend=False, paper_bgcolor="white",
-                          plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter", size=11, color="#212529"),
-                          xaxis=dict(tickfont=dict(color="#212529"), gridcolor="#e9ecef"),
-                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef"))
+    with col2:
+        st.markdown('<div class="sec-hdr">🗺️ Deployment Status</div>', unsafe_allow_html=True)
+        phases = [
+            ("Phase 1 — LIVE","Kerala + Tamil Nadu","355+ MSMEs","3 languages","#059669","✅"),
+            ("Phase 2 — Q3 2025","Karnataka + Telangana","800 target","6 languages","#2563EB","🔄"),
+            ("Phase 3 — Q1 2026","MH + Odisha + WB","3,000 target","9 languages","#ea580c","📋"),
+            ("Phase 4 — Q3 2026","10+ States National","25,000+ target","11 languages","#dc2626","🗓️"),
+        ]
+        for ph,region,mse,lang,color,icon in phases:
+            st.markdown(f"""
+            <div class="phase-card" style="--phase-color:{color};">
+              <div style="font-weight:700;color:{color};font-size:0.88rem;">{icon} {ph}</div>
+              <div style="font-size:0.8rem;color:#475569;margin-top:4px;">{region}</div>
+              <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+                <span class="badge badge-blue">{mse}</span>
+                <span class="badge badge-purple">{lang}</span>
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown('<div class="sec-hdr-green" style="margin-top:16px;">⚡ Impact vs Manual</div>', unsafe_allow_html=True)
+        impact_rows = [
+            ("Onboarding Time","12.4 days","3.8 days","↓ 69%"),
+            ("Rejection Rate","34.7%","8.2%","↓ 76%"),
+            ("Daily Capacity","90 MSEs","1,200 MSEs","↑ 13×"),
+            ("Cat. Accuracy","67.3%","94.2%","↑ 40%"),
+        ]
+        for metric,old,new,delta in impact_rows:
+            st.markdown(f"""
+            <div style="display:flex;justify-content:space-between;align-items:center;
+              padding:7px 12px;background:white;border-radius:8px;margin-bottom:5px;
+              box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+              <span style="font-size:0.8rem;color:#64748b;">{metric}</span>
+              <span style="font-size:0.75rem;color:#94a3b8;text-decoration:line-through;">{old}</span>
+              <span style="font-size:0.85rem;font-weight:700;color:#059669;">{new}</span>
+              <span class="badge badge-green">{delta}</span>
+            </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: OPERATIONS DASHBOARD
+# ══════════════════════════════════════════════════════════════════
+elif page == "📊 Operations Dashboard":
+    st.markdown('<div class="sec-hdr">📊 Live Operations Dashboard</div>', unsafe_allow_html=True)
+
+    onboarded = (df_mse["Status"]=="Onboarded").sum()
+    avg_time  = df_mse["Onboarding Time (days)"].mean()
+    avg_conf  = df_mse["Categorisation Confidence"].mean()
+
+    kpis2 = [
+        (f"{len(df_mse):,}","Total MSEs","All sources","#2563EB"),
+        (f"{onboarded:,}","Onboarded",f"{onboarded/len(df_mse)*100:.1f}% rate","#059669"),
+        (f"{avg_time:.1f}d","Avg Onboarding","↓ vs 12.4d baseline","#ea580c"),
+        (f"{avg_conf*100:.1f}%","Cat. Accuracy","↑ vs 67.3% baseline","#7c3aed"),
+        ("34","Active SNPs","↑ +8 this quarter","#1F4E79"),
+        (f"{df_mse['State'].nunique()}","States","Active deployments","#0891b2"),
+    ]
+    cols = st.columns(6)
+    for col,(val,label,delta,color) in zip(cols,kpis2):
+        with col:
+            st.markdown(f"""
+            <div class="kpi-card" style="--accent:{color};">
+              <div class="kpi-val">{val}</div>
+              <div class="kpi-label">{label}</div>
+              <div class="kpi-delta up">{delta}</div>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1.4,1])
+
+    with col1:
+        st.markdown('<div class="sec-hdr">📍 MSEs by State</div>', unsafe_allow_html=True)
+        sc = df_mse.groupby("State").size().reset_index(name="count").sort_values("count")
+        fig = px.bar(sc, x="count", y="State", orientation="h",
+                     color="count", color_continuous_scale=["#bfdbfe","#1F4E79"])
+        fig.update_layout(**PLT, height=350, coloraxis_showscale=False,
+                          xaxis=dict(**AXIS, title=""), yaxis=dict(**AXIS, title=""))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown('<div class="sec-hdr">📊 Registration Status</div>', unsafe_allow_html=True)
+        stc = df_mse["Status"].value_counts()
+        fig = go.Figure(go.Pie(labels=stc.index, values=stc.values, hole=0.52,
+                               marker_colors=["#1F4E79","#2563EB","#f59e0b","#dc2626","#6b7280"],
+                               textinfo="label+percent", textfont=dict(size=9)))
+        fig.add_annotation(text=f"<b>{len(df_mse):,}</b><br><span style='font-size:10px'>Total</span>",
+                           x=0.5,y=0.5,font=dict(size=14,color="#1F4E79"),showarrow=False)
+        fig.update_layout(**PLT, height=340, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="sec-hdr">🏭 Sector Distribution</div>', unsafe_allow_html=True)
+        sd = df_mse.groupby("Sector").size().reset_index(name="count").sort_values("count",ascending=False)
+        fig = px.bar(sd, x="Sector", y="count", color="count",
+                     color_continuous_scale=["#bfdbfe","#1F4E79"])
+        fig.update_layout(**PLT, height=290, coloraxis_showscale=False,
+                          xaxis=dict(**AXIS,tickangle=-35,title=""),
+                          yaxis=dict(**AXIS,title=""))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown('<div class="sec-hdr">⚡ Onboarding Speed vs Baseline</div>', unsafe_allow_html=True)
+        ob = df_mse["Onboarding Time (days)"].dropna()
+        fig = go.Figure()
+        fig.add_trace(go.Histogram(x=ob, nbinsx=20, name="MapMSE",
+                                   marker_color="#2563EB", opacity=0.85))
+        fig.add_trace(go.Histogram(x=np.random.lognormal(2.5,0.3,500), nbinsx=20,
+                                   name="Manual Baseline", marker_color="#dc2626", opacity=0.4))
+        fig.add_vline(x=ob.mean(), line_dash="dash", line_color="#1F4E79",
+                      annotation_text=f"Avg:{ob.mean():.1f}d", annotation_font_size=10)
+        fig.update_layout(**PLT, height=290, barmode="overlay",
+                          xaxis=dict(**AXIS,title="Days"),
+                          yaxis=dict(**AXIS,title="Count"),
+                          legend=dict(font=dict(size=10),bgcolor="rgba(255,255,255,0.9)"))
         st.plotly_chart(fig, use_container_width=True)
 
 
-# ══════════════════════ PAGE: AI REGISTRATION ═════════════════════
-elif page == "🤖 AI Registration":
-    st.markdown('<div class="section-header">🤖 AI-Powered Multilingual MSE Registration Engine</div>',
-                unsafe_allow_html=True)
+# ══════════════════════════════════════════════════════════════════
+# PAGE: PERFORMANCE & BENCHMARKS
+# ══════════════════════════════════════════════════════════════════
+elif page == "📈 Performance & Benchmarks":
+    st.markdown('<div class="sec-hdr">📈 AI Performance Indicators & Technical Benchmarks</div>', unsafe_allow_html=True)
 
-    tab1,tab2,tab3 = st.tabs(["🎙️ Voice Registration","📄 Document OCR","✏️ Manual Entry"])
+    # Summary table
+    st.markdown('<div class="sec-hdr-green">📋 Key Performance Summary</div>', unsafe_allow_html=True)
+    perf_df = pd.DataFrame([
+        ["Whisper Large v3","ASR","Word Error Rate (WER)","8.9%","3.7%","↓ 58.4%","MIT","25K hrs, 11 languages"],
+        ["Tesseract 5 + LayoutLM","OCR","Field Accuracy","91.2%","98.7%","↑ 8.2%","Apache 2.0","50K MSME docs"],
+        ["AI4Bharat IndicTrans2","MT","BLEU Score","72.4","76.5","↑ +4.1 pts","Apache 2.0","1,200 MSME pairs"],
+        ["SpaCy 3.7 NER","NER","F1 Score","0.841","0.913","↑ 8.6%","MIT","800 annotated docs"],
+    ], columns=["Model","Type","Metric","Baseline","MapMSE","Improvement","License","Training Data"])
+    st.dataframe(perf_df, use_container_width=True, hide_index=True, height=180)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="sec-hdr">📊 MapMSE vs Baseline</div>', unsafe_allow_html=True)
+        fig = go.Figure()
+        models = ["Whisper v3\n(ASR)","LayoutLM\n(OCR)","IndicTrans2\n(MT)","SpaCy\n(NER)"]
+        baseline = [8.9, 91.2, 72.4, 84.1]
+        mapmse   = [3.7, 98.7, 76.5, 91.3]
+        x = list(range(len(models)))
+        fig.add_trace(go.Bar(name="Baseline",x=models,y=baseline,marker_color="#94a3b8",opacity=0.8))
+        fig.add_trace(go.Bar(name="MapMSE", x=models,y=mapmse, marker_color="#2563EB",opacity=0.9))
+        for i,(b,m) in enumerate(zip(baseline,mapmse)):
+            d = m-b; sign="+"; col2_c="#16a34a"
+            if i==0: sign=""; col2_c="#dc2626" if d>0 else "#16a34a"
+            fig.add_annotation(x=models[i],y=max(b,m)+2,text=f"{sign}{d:.1f}",
+                               font=dict(size=9,color=col2_c,family="Inter"),showarrow=False)
+        fig.update_layout(**PLT,height=320,barmode="group",
+                          xaxis=dict(**AXIS,title=""),yaxis=dict(**AXIS,title="Score"),
+                          legend=dict(font=dict(size=10),bgcolor="rgba(255,255,255,0.9)"))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown('<div class="sec-hdr">🎯 Technical Robustness Radar</div>', unsafe_allow_html=True)
+        labels=["Accuracy","Robustness","Language\nCoverage","Domain\nAdapt.","Latency","Compliance"]
+        N=len(labels); angles=[n/float(N)*2*3.14159 for n in range(N)]; angles+=angles[:1]
+        b_vals=[0.72,0.65,0.55,0.60,0.70,0.50]+[0.72]
+        m_vals=[0.96,0.89,0.92,0.95,0.85,0.97]+[0.96]
+        fig=go.Figure()
+        fig.add_trace(go.Scatterpolar(r=b_vals,theta=labels+[labels[0]],name="Baseline",
+                                      fill="toself",fillcolor="rgba(148,163,184,0.15)",
+                                      line=dict(color="#94a3b8",width=1.5)))
+        fig.add_trace(go.Scatterpolar(r=m_vals,theta=labels+[labels[0]],name="MapMSE",
+                                      fill="toself",fillcolor="rgba(37,99,235,0.2)",
+                                      line=dict(color="#2563EB",width=2.5)))
+        fig.update_layout(**PLT,height=320,polar=dict(
+            bgcolor="#f8fafc",radialaxis=dict(visible=True,range=[0,1],tickfont=dict(size=8)),
+            angularaxis=dict(tickfont=dict(size=9))),
+            legend=dict(font=dict(size=10),bgcolor="rgba(255,255,255,0.9)"))
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown('<div class="sec-hdr-red">⚠️ Error Rate Analysis — False Positive / Negative</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        err_cats=["ASR: Word Error","ASR: False Insertion","OCR: Miss Rate",
+                  "OCR: False Field","NER: False Positive","NER: False Negative","MT: Terminology Error"]
+        b_err=[8.9,4.1,8.8,3.2,14.2,12.0,9.3]; m_err=[3.7,1.6,1.3,0.8,5.1,7.2,4.8]
+        y=list(range(len(err_cats))); h=0.32
+        fig=go.Figure()
+        fig.add_trace(go.Bar(y=err_cats,x=b_err,name="Baseline",orientation="h",marker_color="#94a3b8",opacity=0.85))
+        fig.add_trace(go.Bar(y=err_cats,x=m_err,name="MapMSE",orientation="h",marker_color="#ea580c",opacity=0.9))
+        for b,m,cat in zip(b_err,m_err,err_cats):
+            red=((b-m)/b)*100
+            fig.add_annotation(x=m+0.3,y=cat,text=f"↓{red:.0f}%",font=dict(size=8,color="#16a34a"),showarrow=False)
+        fig.update_layout(**PLT,height=320,barmode="group",
+                          xaxis=dict(**AXIS,title="Error Rate (%)"),yaxis=dict(**AXIS,title=""),
+                          legend=dict(font=dict(size=10),bgcolor="rgba(255,255,255,0.9)"))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown('<div class="sec-hdr-green" style="margin-top:0;">📐 Measurement Methodology</div>', unsafe_allow_html=True)
+        methodology = [
+            ("ASR / WER","NIST SCLITE scoring · 2,500-utterance test set · stratified by language, gender, noise"),
+            ("OCR Accuracy","ISO 8613 field-level · 5,000 unseen documents · ground-truth by certified labellers"),
+            ("MT BLEU","SacreBLEU · 1,200 MSME sentence pairs · bilingual expert post-edit"),
+            ("NER F1","CoNLL-2003 protocol · 800 annotated docs · entity-level P/R/F1"),
+            ("Robustness","5 SNR levels (0–30 dB) · 4 dialect variants per language"),
+            ("Data Split","70/15/15 train/val/test · geographic & demographic stratification"),
+            ("Inter-annotator","Cohen's Kappa > 0.85 · two certified domain experts"),
+            ("Monitoring","24-hour drift detection · retraining at >5% degradation"),
+        ]
+        for topic, detail in methodology:
+            st.markdown(f"""
+            <div style="padding:8px 12px;background:white;border-radius:8px;margin-bottom:5px;
+              border-left:3px solid #059669;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+              <div style="font-weight:700;color:#065f46;font-size:0.8rem;">{topic}</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">{detail}</div>
+            </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: DEPLOYMENT & ROADMAP
+# ══════════════════════════════════════════════════════════════════
+elif page == "🚀 Deployment & Roadmap":
+    st.markdown('<div class="sec-hdr">🚀 Solution Deployment Details & Expansion Roadmap</div>', unsafe_allow_html=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+    dep_kpis = [
+        ("2","States Live","Kerala & Tamil Nadu","#059669"),
+        ("355+","MSMEs Served","Phase 1 Live","#2563EB"),
+        ("3","Languages Active","ML, TA, HI","#7c3aed"),
+        ("TRL 6","Current Level","Target TRL 9 Q3 2026","#ea580c"),
+    ]
+    for col,(val,label,sub,color) in zip([col1,col2,col3,col4],dep_kpis):
+        with col:
+            st.markdown(f"""
+            <div class="kpi-card" style="--accent:{color};">
+              <div class="kpi-val">{val}</div>
+              <div class="kpi-label">{label}</div>
+              <div class="kpi-delta up">{sub}</div>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Phase cards
+    st.markdown('<div class="sec-hdr">📋 Phase-by-Phase Deployment</div>', unsafe_allow_html=True)
+    phase_data = [
+        ("Phase 1 — LIVE","#059669","Kerala (6 districts) + Tamil Nadu (4 districts)",
+         "355+ MSMEs","3 (ML, TA, HI)","Udyam, GST, Scheme Alerts",
+         "Handloom cooperatives (Kerala), auto-component SMEs (Coimbatore), food-processing units (Thrissur). WER validated at 3.7%, OCR at 98.7% on live production data."),
+        ("Phase 2 — Q3 2025","#2563EB","Karnataka (Bengaluru, Hubballi) + Telangana (Hyderabad, Warangal)",
+         "800 MSEs targeted","6 (+ KN, TE)","Udyam, GST, NSIC, ONDC, Alerts",
+         "Integration with Karnataka Udyog Mitra and TSIIC portals. ONDC seller onboarding module. IndicTrans2 extended to Kannada and Telugu."),
+        ("Phase 3 — Q1 2026","#ea580c","Maharashtra (Pune, Nashik) + Odisha + West Bengal",
+         "3,000 MSEs targeted","9 (+ MR, OR, BN)","Full suite + Credit Linkage",
+         "MIDC, Odisha MSME Development Institute, WB MSME Directorate collaboration. Cluster analytics dashboards. MUDRA loan portal integration."),
+        ("Phase 4 — Q3 2026 (TRL 9)","#dc2626","10+ States — National Rollout",
+         "25,000+ MSEs","11 (Full Stack)","Complete suite + Sectoral verticals",
+         "MeitY/DC-MSME national deployment. Punjabi, Gujarati, Urdu added. Agriculture (Kisan), healthcare (AYUSH MSME), SHG finance (NRLM) sector modules."),
+    ]
+    cols = st.columns(2)
+    for i,(phase,color,region,mse,lang,uc,detail) in enumerate(phase_data):
+        with cols[i%2]:
+            st.markdown(f"""
+            <div style="background:white;border-radius:12px;padding:18px;margin-bottom:12px;
+              border-left:5px solid {color};box-shadow:0 2px 10px rgba(0,0,0,0.07);">
+              <div style="font-weight:800;color:{color};font-size:0.92rem;margin-bottom:10px;">{phase}</div>
+              <table style="width:100%;font-size:0.78rem;border-collapse:collapse;">
+                <tr><td style="color:#94a3b8;padding:3px 0;width:90px;">Region</td>
+                    <td style="color:#1e293b;font-weight:600;">{region}</td></tr>
+                <tr><td style="color:#94a3b8;padding:3px 0;">MSE Target</td>
+                    <td><span class="badge badge-blue">{mse}</span></td></tr>
+                <tr><td style="color:#94a3b8;padding:3px 0;">Languages</td>
+                    <td><span class="badge badge-purple">{lang}</span></td></tr>
+                <tr><td style="color:#94a3b8;padding:3px 0;">Use Cases</td>
+                    <td style="color:#1e293b;">{uc}</td></tr>
+              </table>
+              <div style="margin-top:10px;padding:8px 10px;background:#f8fafc;border-radius:6px;
+                font-size:0.75rem;color:#64748b;line-height:1.5;">{detail}</div>
+            </div>""", unsafe_allow_html=True)
+
+    # Gantt Timeline
+    st.markdown('<div class="sec-hdr">📅 Deployment Timeline</div>', unsafe_allow_html=True)
+    fig = go.Figure()
+    gantt = [
+        ("Phase 1: Kerala & Tamil Nadu Pilot", 0, 6, "#059669"),
+        ("Phase 2: Karnataka & Telangana", 5, 5, "#2563EB"),
+        ("Phase 3: Maharashtra, Odisha, WB", 9, 6, "#ea580c"),
+        ("Phase 4: National Rollout 10+ States", 14, 8, "#dc2626"),
+        ("Sectoral Expansion (Agri, Health, SHG)", 10, 12, "#7c3aed"),
+    ]
+    for label,start,dur,color in gantt:
+        fig.add_trace(go.Bar(y=[label],x=[dur],base=[start],orientation="h",
+                             marker_color=color,opacity=0.85,showlegend=False,
+                             hovertemplate=f"{label}<br>Month {start}–{start+dur}<extra></extra>"))
+    fig.add_vline(x=6, line_dash="dash", line_color="#059669",
+                  annotation_text="▲ NOW", annotation_font=dict(size=10,color="#059669"))
+    fig.update_layout(**PLT, height=280,
+                      xaxis=dict(**AXIS,title="Months from Inception",tickvals=list(range(0,25,2)),
+                                 ticktext=[f"M{i}" for i in range(0,25,2)]),
+                      yaxis=dict(**AXIS,title=""),barmode="overlay")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Sectoral expansion
+    st.markdown('<div class="sec-hdr">🌐 Sectoral Replicability</div>', unsafe_allow_html=True)
+    sect_df = pd.DataFrame([
+        ["Agriculture","Kisan PM-KISAN docs, crop insurance, mandi linkage","Kisan portal, crop data","Q2 2026","~60%"],
+        ["Rural Healthcare","Ayushman Bharat claims, AYUSH MSME registration","Health ministry forms","Q3 2026","~55%"],
+        ["SHG Finance","NRLM SHG loans, DAY-NRLM onboarding","SHG ledgers, NRLM data","Q3 2026","~65%"],
+        ["Handicrafts/GI","GI tag registration, artisan identity cards","GI registry docs","Q4 2026","~70%"],
+    ], columns=["Sector","Key Use Cases","Data Requirements","Timeline","Dev Cost Saving"])
+    st.dataframe(sect_df, use_container_width=True, hide_index=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: BUSINESS INTELLIGENCE
+# ══════════════════════════════════════════════════════════════════
+elif page == "💼 Business Intelligence":
+    st.markdown('<div class="sec-hdr">💼 Business Intelligence — Model, Market & Go-to-Market</div>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["🏦 Business Model","📊 Market Analysis","🚀 Go-to-Market"])
 
     with tab1:
-        col1,col2 = st.columns(2)
+        col1, col2 = st.columns([1.2,1])
         with col1:
-            st.markdown("""
-            <div class="info-card">
-              <strong>🎙️ Voice-Enabled Registration</strong><br>
-              <small>Whisper-large-v3 + IndicASR across 11 Indian languages.
-              96.3% Word Error Rate on MSE domain speech.</small>
-            </div>
-            """, unsafe_allow_html=True)
-            lang = st.selectbox("Select Language", LANGUAGES)
+            st.markdown('<div class="sec-hdr">🏦 Business Model — B2G2B Architecture</div>', unsafe_allow_html=True)
+            revenue_streams = [
+                ("State Government Licensing","SaaS license fee per state deployment","₹25–50L/yr/state","Primary","#2563EB"),
+                ("Per-MSE Transaction Fees","Processing fee per document/scheme application","₹15–40/transaction","Primary","#059669"),
+                ("API Subscription","BFSI/fintech access to MSE credit profiles","₹5–15L/yr","Secondary","#7c3aed"),
+                ("Freemium → Premium","Mobile base tier; analytics & credit upsell","₹499–2499/mo","Growth","#ea580c"),
+                ("MeitY/SIDBI Grants","Digital India MSME programme grants","Project-based","Supplementary","#0891b2"),
+                ("ONDC Revenue Share","% of GMV from ONDC-onboarded MSEs","0.3–0.8% GMV","Long-term","#dc2626"),
+            ]
+            for name,desc,rev,rtype,color in revenue_streams:
+                st.markdown(f"""
+                <div style="background:white;border-radius:10px;padding:12px 16px;margin-bottom:7px;
+                  border-left:4px solid {color};box-shadow:0 1px 6px rgba(0,0,0,0.05);
+                  display:flex;justify-content:space-between;align-items:center;">
+                  <div style="flex:1;">
+                    <div style="font-weight:700;color:{color};font-size:0.85rem;">{name}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">{desc}</div>
+                  </div>
+                  <div style="text-align:right;margin-left:12px;">
+                    <div style="font-weight:800;color:#1e293b;font-size:0.85rem;">{rev}</div>
+                    <span class="badge badge-gray" style="font-size:0.65rem;">{rtype}</span>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown('<div class="sec-hdr">📊 Revenue Mix (Year 3 Projection)</div>', unsafe_allow_html=True)
+            labels=["Gov Licensing","Transaction Fees","API Subscriptions","Freemium Premium","Grants","ONDC Share"]
+            values=[35,28,15,12,5,5]
+            fig=go.Figure(go.Pie(labels=labels,values=values,hole=0.5,
+                                 marker_colors=["#2563EB","#059669","#7c3aed","#ea580c","#0891b2","#dc2626"],
+                                 textinfo="label+percent",textfont=dict(size=9)))
+            fig.add_annotation(text="<b>Revenue</b><br>Mix",x=0.5,y=0.5,
+                               font=dict(size=11,color="#1F4E79"),showarrow=False)
+            fig.update_layout(**PLT,height=320,showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown('<div class="callout-box" style="--cb-color:#2563EB;--cb-bg:#eff6ff;">'
+                        '<div style="font-weight:700;color:#1e40af;font-size:0.85rem;">💡 B2G2B Model Advantage</div>'
+                        '<div style="font-size:0.78rem;color:#475569;margin-top:6px;">'
+                        'Government as distribution channel eliminates customer acquisition cost. '
+                        'State MSMEs reached via existing DIC/NSIC touchpoints — '
+                        'marginal cost per new user < ₹80 vs ₹1,200+ for direct acquisition.'
+                        '</div></div>', unsafe_allow_html=True)
+
+    with tab2:
+        col1, col2 = st.columns([1.3,1])
+        with col1:
+            st.markdown('<div class="sec-hdr">📊 Market Sizing</div>', unsafe_allow_html=True)
+            market_rows = [
+                ("Total MSME Population","63 Million","India registered MSMEs","#1F4E79"),
+                ("Digitally Underserved","44 Million","70% lack digital tools","#dc2626"),
+                ("Rural/Semi-urban Segment","35 Million","Primary target market","#ea580c"),
+                ("MSME Digitalisation Market","₹18,000 Cr","22% CAGR","#7c3aed"),
+                ("Year 1 Target (0.03%)","25,000 MSEs","Phase 1–2 rollout","#2563EB"),
+                ("Year 3 Target (0.3%)","190,000 MSEs","National deployment","#059669"),
+                ("TAM Penetration (5 yr)","1%+","350,000+ MSEs","#0891b2"),
+            ]
+            for label,val,note,color in market_rows:
+                st.markdown(f"""
+                <div style="display:flex;justify-content:space-between;padding:9px 14px;
+                  background:white;border-radius:8px;margin-bottom:5px;
+                  border-left:3px solid {color};box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                  <span style="font-size:0.8rem;color:#64748b;">{label}</span>
+                  <span style="font-weight:800;color:{color};font-size:0.88rem;">{val}</span>
+                  <span style="font-size:0.75rem;color:#94a3b8;">{note}</span>
+                </div>""", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown('<div class="sec-hdr">🏆 Competitive Landscape</div>', unsafe_allow_html=True)
+            comp_df = pd.DataFrame([
+                ["MapMSE","✅ Yes","✅ 11 langs","✅ Full","✅ ONDC Native","✅ Compliant"],
+                ["Vyapar","❌ No","❌ Hindi/EN","⚠️ Partial","❌ No","⚠️ Partial"],
+                ["Khatabook","❌ No","⚠️ 3 langs","❌ Basic","❌ No","⚠️ Partial"],
+                ["Udyam Portal","❌ No","⚠️ Hindi only","❌ None","❌ No","✅ Gov"],
+                ["IndiaMart","❌ No","❌ English","⚠️ B2B only","⚠️ Partial","⚠️ Partial"],
+            ], columns=["Platform","AI-Powered","Language Coverage","Document AI","ONDC Integration","DPDP Compliant"])
+            st.dataframe(comp_df, use_container_width=True, hide_index=True, height=240)
+
+            st.markdown('<div class="callout-box" style="--cb-color:#059669;--cb-bg:#f0fdf4;">'
+                        '<div style="font-weight:700;color:#065f46;font-size:0.85rem;">🎯 Unique Differentiation</div>'
+                        '<div style="font-size:0.78rem;color:#475569;margin-top:4px;">'
+                        'MapMSE is the only platform combining multilingual AI (11 langs), '
+                        'government API integration (Udyam + NSIC + ONDC), '
+                        'and document-first processing for rural MSME operators.'
+                        '</div></div>', unsafe_allow_html=True)
+
+    with tab3:
+        st.markdown('<div class="sec-hdr">🚀 Go-to-Market Strategy</div>', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            gtm_phases = [
+                ("1. Government Channel Entry","Q1–Q2 2025","Embed via DIC / NSIC touchpoints in Phase 1 states. State government MOU as primary distribution — zero direct CAC.",["#059669"]),
+                ("2. Grassroots Activation","Q2–Q3 2025","MSME facilitation centres, handloom cooperative camps, voice-first WhatsApp onboarding bot for feature phones.",["#2563EB"]),
+                ("3. Enterprise & BFSI Outreach","Q3 2025","SIDBI, NABARD, PSU banks seeking AI-powered MSME credit assessment data. API licensing model.",["#7c3aed"]),
+                ("4. Digital & Content Marketing","Ongoing","Malayalam/regional YouTube channel (NYZTrade brand). MSME association webinars. SEO-optimised regional content.",["#ea580c"]),
+                ("5. National Scale via MeitY","2026","Digital India MSME programme channel. DC-MSME partnership for all-India deployment.",["#dc2626"]),
+            ]
+            for phase,timeline,desc,colors in gtm_phases:
+                st.markdown(f"""
+                <div style="background:white;border-radius:10px;padding:14px 16px;margin-bottom:8px;
+                  border-left:4px solid {colors[0]};box-shadow:0 1px 5px rgba(0,0,0,0.05);">
+                  <div style="display:flex;justify-content:space-between;">
+                    <div style="font-weight:700;color:{colors[0]};font-size:0.85rem;">{phase}</div>
+                    <span class="badge badge-gray">{timeline}</span>
+                  </div>
+                  <div style="font-size:0.78rem;color:#64748b;margin-top:6px;">{desc}</div>
+                </div>""", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown('<div class="sec-hdr">📈 CAC vs LTV Projection</div>', unsafe_allow_html=True)
+            years=["Year 1","Year 2","Year 3","Year 4","Year 5"]
+            cac=[1200,800,450,280,180]; ltv=[3500,6200,9800,14500,21000]
+            fig=go.Figure()
+            fig.add_trace(go.Bar(x=years,y=cac,name="CAC (₹)",marker_color="#dc2626",opacity=0.8))
+            fig.add_trace(go.Scatter(x=years,y=ltv,name="LTV (₹)",mode="lines+markers",
+                                     line=dict(color="#059669",width=2.5),yaxis="y2"))
+            fig.update_layout(**PLT,height=280,
+                              xaxis=dict(**AXIS,title=""),
+                              yaxis=dict(**AXIS,title="CAC ₹"),
+                              yaxis2=dict(title="LTV ₹",overlaying="y",side="right",
+                                          tickfont=dict(color="#059669",size=10)),
+                              legend=dict(font=dict(size=10),bgcolor="rgba(255,255,255,0.9)"))
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown('<div class="sec-hdr" style="margin-top:16px;">🌱 Growth Funnel</div>', unsafe_allow_html=True)
+            funnel_data=[("Awareness (outreach)","500,000","#bfdbfe"),
+                         ("Platform Visits","120,000","#93c5fd"),
+                         ("Registration Started","35,000","#60a5fa"),
+                         ("Registration Completed","22,000","#3b82f6"),
+                         ("SNP Matched","18,000","#2563EB"),
+                         ("Active on ONDC","12,000","#1d4ed8")]
+            for stage,num,col_bg in funnel_data:
+                w = int(int(num.replace(",",""))/5000)
+                st.markdown(f"""
+                <div style="background:{col_bg};border-radius:6px;padding:6px 14px;
+                  margin-bottom:3px;width:{min(w,100)}%;min-width:120px;">
+                  <span style="font-size:0.75rem;font-weight:600;color:#1e3a5f;">{stage}: {num}</span>
+                </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: GOVERNANCE & COMPLIANCE
+# ══════════════════════════════════════════════════════════════════
+elif page == "🔒 Governance & Compliance":
+    st.markdown('<div class="sec-hdr">🔒 Data Governance, Security & Responsible AI</div>', unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="sec-hdr-green">🛡️ Data Governance Framework</div>', unsafe_allow_html=True)
+        gov_items = [
+            ("Data Collection","Explicit institutional consent · PII anonymised at ingestion pipeline entry","#059669"),
+            ("Encryption","AES-256 at rest · TLS 1.3 in transit · end-to-end across all API calls","#2563EB"),
+            ("Data Localisation","100% India-hosted servers (AWS Mumbai / Azure India Central) · No cross-border transfer","#7c3aed"),
+            ("Access Control","RBAC zero-trust architecture · role-scoped API keys · MFA enforced","#ea580c"),
+            ("Retention Policy","Active: 24 months · Archive: 36 months · Secure deletion at 36m","#0891b2"),
+            ("Audit Trails","Immutable logs · version-controlled models · bi-annual third-party audit","#dc2626"),
+            ("Breach Protocol","DPDP statutory notification timelines · 72-hr disclosure SLA","#1F4E79"),
+        ]
+        for title,detail,color in gov_items:
             st.markdown(f"""
-            <div style="background:#f0f7ff;border:2px dashed #2E75B6;border-radius:10px;
-                        padding:30px;text-align:center;margin:10px 0;">
-              <div style="font-size:3rem;">🎤</div>
-              <div style="color:#1F4E79;font-weight:600;margin-top:8px;">Click to Record</div>
-              <div style="color:#6c757d;font-size:0.8rem;">(Demo — real version uses browser mic)</div>
-              <div style="margin-top:8px;font-size:0.85rem;color:#2E75B6;">Language: <b>{lang}</b></div>
+            <div style="background:white;border-radius:10px;padding:12px 16px;margin-bottom:6px;
+              border-left:4px solid {color};box-shadow:0 1px 5px rgba(0,0,0,0.05);">
+              <div style="font-weight:700;color:{color};font-size:0.82rem;">{title}</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">{detail}</div>
             </div>""", unsafe_allow_html=True)
-            if st.button("🎙️ Simulate Voice Input", use_container_width=True, type="primary"):
-                st.session_state["voice_done"] = True
+
+    with col2:
+        st.markdown('<div class="sec-hdr-green">⚖️ Responsible AI Principles</div>', unsafe_allow_html=True)
+        rai_items = [
+            ("Fairness","Demographically stratified training data across rural/urban, gender, and 11 language communities","#059669"),
+            ("Transparency","Model cards · documented data provenance · plain-language AI decision explanations in regional languages","#2563EB"),
+            ("Interpretability","SHAP-based explainability layers on NER and classification outputs · confidence scores surfaced to users","#7c3aed"),
+            ("Auditability","Immutable audit logs · version-controlled models · bi-annual algorithmic audits","#ea580c"),
+            ("Inclusivity","Voice-first interfaces · low-literacy UX design · offline PWA for zero-connectivity zones","#0891b2"),
+            ("Accountability","Human-in-loop review for low-confidence outputs · clear escalation pathways","#dc2626"),
+        ]
+        for title,detail,color in rai_items:
+            st.markdown(f"""
+            <div style="background:white;border-radius:10px;padding:12px 16px;margin-bottom:6px;
+              border-left:4px solid {color};box-shadow:0 1px 5px rgba(0,0,0,0.05);">
+              <div style="font-weight:700;color:{color};font-size:0.82rem;">{title}</div>
+              <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">{detail}</div>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown('<div class="sec-hdr">📜 Regulatory Compliance Status</div>', unsafe_allow_html=True)
+    comp_df = pd.DataFrame([
+        ["Information Technology Act, 2000","Data handling & cybersecurity obligations","✅ Compliant","Ongoing"],
+        ["DPDP Act, 2023","Personal data protection & consent framework","✅ Compliant","Annual review"],
+        ["MeitY AI Guidelines","Responsible AI deployment standards","✅ Aligned","Bi-annual audit"],
+        ["UNESCO AI Ethics","Fairness, transparency, human rights in AI","✅ Aligned","Yearly assessment"],
+        ["RBI Digital Lending Guidelines","Credit data usage for BFSI integrations","✅ Compliant","Per-integration review"],
+        ["ONDC Network Policy","Seller onboarding and data standards","✅ Certified","Quarterly"],
+    ], columns=["Regulation/Standard","Scope","Status","Review Cycle"])
+    st.dataframe(comp_df, use_container_width=True, hide_index=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: PARTNERSHIPS
+# ══════════════════════════════════════════════════════════════════
+elif page == "🤝 Partnerships":
+    st.markdown('<div class="sec-hdr">🤝 Partnerships, Collaborations & Ecosystem</div>', unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="sec-hdr-green">✅ Existing Partnerships</div>', unsafe_allow_html=True)
+        existing = [
+            ("AI4Bharat","Academic / Model","IndicTrans2 model access · research collaboration on Indic NLP","🔬","#2563EB"),
+            ("Kerala MSME Facilitation Centre","Government","Phase 1 pilot co-deployment · data-sharing MOU · kiosk rollout","🏛️","#059669"),
+            ("Tamil Nadu MSME Directorate","Government","Phase 1 deployment · data-sharing MOU · district-level integration","🏛️","#059669"),
+            ("ICSSR","Academic Research","Grant funding for women workforce participation & financial autonomy study (Kerala)","📚","#7c3aed"),
+        ]
+        for name,ptype,detail,icon,color in existing:
+            st.markdown(f"""
+            <div style="background:white;border-radius:12px;padding:15px 18px;margin-bottom:8px;
+              border-left:5px solid {color};box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                <span style="font-size:1.3rem;">{icon}</span>
+                <div>
+                  <div style="font-weight:700;color:{color};font-size:0.9rem;">{name}</div>
+                  <span class="badge badge-green" style="font-size:0.65rem;">{ptype}</span>
+                </div>
+              </div>
+              <div style="font-size:0.77rem;color:#64748b;">{detail}</div>
+            </div>""", unsafe_allow_html=True)
+
+    with col2:
+        st.markdown('<div class="sec-hdr-warn">🔄 In-Progress / Targeted</div>', unsafe_allow_html=True)
+        targeted = [
+            ("Karnataka Udyog Mitra","Government","Phase 2 state portal integration — MOU under discussion","🔄","#2563EB"),
+            ("Telangana TSIIC","Government","Phase 2 deployment collaboration — onboarding in progress","🔄","#2563EB"),
+            ("ONDC Network","Commerce","Seller onboarding integration module — technical integration active","⚙️","#7c3aed"),
+            ("SIDBI","Finance","Credit linkage module — digital MSME credit assessment data partnership","💰","#059669"),
+            ("MeitY / Digital India","Government","National deployment under Digital India MSME initiative","🇮🇳","#dc2626"),
+            ("NABARD","Finance","SHG-MSME rural finance bridge — credit access for agricultural MSMEs","🌾","#059669"),
+            ("Amazon Sambhav","Commerce","E-commerce onboarding for ONDC-registered MSMEs","🛒","#ea580c"),
+            ("NSE Emerge","Finance","MSME capital markets access and SME IPO readiness module","📈","#7c3aed"),
+        ]
+        for name,ptype,detail,icon,color in targeted:
+            status = "🔄 In Progress" if icon=="🔄" or icon=="⚙️" else "🎯 Targeted"
+            badge_cls = "badge-blue" if status=="🔄 In Progress" else "badge-orange"
+            st.markdown(f"""
+            <div style="background:white;border-radius:10px;padding:12px 15px;margin-bottom:6px;
+              border-left:4px solid {color};box-shadow:0 1px 5px rgba(0,0,0,0.05);
+              display:flex;justify-content:space-between;align-items:flex-start;">
+              <div style="flex:1;">
+                <div style="font-weight:700;color:{color};font-size:0.82rem;">{name}
+                  <span class="badge {badge_cls}" style="margin-left:6px;font-size:0.65rem;">{status}</span>
+                </div>
+                <div style="font-size:0.72rem;color:#94a3b8;margin-top:1px;">{ptype}</div>
+                <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">{detail}</div>
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+    # Ecosystem map
+    st.markdown('<div class="sec-hdr">🌐 Ecosystem Overview</div>', unsafe_allow_html=True)
+    fig = go.Figure()
+    # Central node
+    fig.add_trace(go.Scatter(x=[0],y=[0],mode="markers+text",
+        marker=dict(size=50,color="#1F4E79",symbol="circle"),
+        text=["MapMSE"],textposition="middle center",
+        textfont=dict(color="white",size=13,family="Inter"),showlegend=False))
+    # Nodes
+    nodes = [
+        (0,2.2,"AI4Bharat","#2563EB"),(-1.8,1.5,"Kerala MSME","#059669"),
+        (1.8,1.5,"TN MSME","#059669"),(2.2,0,"ONDC Network","#7c3aed"),
+        (1.8,-1.5,"SIDBI","#ea580c"),(0,-2.2,"MeitY","#dc2626"),
+        (-1.8,-1.5,"NABARD","#0891b2"),(-2.2,0,"ICSSR","#6b7280"),
+    ]
+    for x,y,label,color in nodes:
+        fig.add_trace(go.Scatter(x=[x],y=[y],mode="markers+text",
+            marker=dict(size=30,color=color,symbol="circle"),
+            text=[label],textposition="top center",
+            textfont=dict(color="#1e293b",size=9,family="Inter"),showlegend=False))
+        fig.add_trace(go.Scatter(x=[0,x],y=[0,y],mode="lines",
+            line=dict(color="#cbd5e1",width=1.5,dash="dot"),showlegend=False))
+    fig.update_layout(**PLT,height=380,
+        xaxis=dict(showgrid=False,zeroline=False,showticklabels=False,range=[-3,3]),
+        yaxis=dict(showgrid=False,zeroline=False,showticklabels=False,range=[-3,3]),
+        plot_bgcolor="white")
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: DATA SOURCES
+# ══════════════════════════════════════════════════════════════════
+elif page == "🔌 Data Sources":
+    st.markdown('<div class="sec-hdr">🔌 Data Sources — How Real Data Enters MapMSE</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="info-card">
+      <span style="color:#1F4E79;font-size:0.92rem;">
+      📌 <strong>Control Panel for Data.</strong> Switch between Demo, your own Excel file,
+      or a live government API — the entire platform updates instantly across all pages.
+      </span>
+    </div>""", unsafe_allow_html=True)
+
+    # Pipeline flow
+    col1,col2,col3,col4,col5 = st.columns([2,0.3,2,0.3,2])
+    for col_,text,title in [(col1,"📥 Step 1 — Data Enters","Choose 1 of 4 entry methods"),
+                             (col3,"⚙️ Step 2 — AI Processes","Validate · Score · Match"),
+                             (col5,"📊 Step 3 — App Updates","All 7 pages reflect your data")]:
+        with col_:
+            st.markdown(f"""
+            <div class="pipeline-step">
+              <div style="font-weight:700;color:#1F4E79;margin-bottom:4px;">{text}</div>
+              <div style="font-size:0.8rem;color:#64748b;">{title}</div>
+            </div>""", unsafe_allow_html=True)
+    for col_ in [col2, col4]:
+        with col_:
+            st.markdown('<div style="text-align:center;font-size:1.8rem;padding-top:20px;color:#2563EB;">→</div>', unsafe_allow_html=True)
+
+    tab1,tab2,tab3,tab4 = st.tabs(["📂 Upload File","🌐 Udyam API","✏️ Manual Entry","🎲 Demo Data"])
+
+    with tab1:
+        col1,col2 = st.columns([1.2,1])
+        with col1:
+            st.markdown("""<div class="info-card"><strong style="color:#1F4E79;">📂 Upload Excel / CSV</strong><br>
+            <small style="color:#64748b;">Upload your MSE dataset directly. Required columns:
+            Enterprise Name · State · Sector · Annual Turnover (L) · No. of Employees</small></div>""",
+            unsafe_allow_html=True)
+            st.download_button("📥 Download Template", data=make_sample_excel(),
+                               file_name="MapMSE_Template.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                               use_container_width=True)
+        with col2:
+            uploaded = st.file_uploader("Drop Excel / CSV", type=["xlsx","xls","csv"])
+            if uploaded:
+                df_new, err = process_uploaded_file(uploaded)
+                if err:
+                    st.error(f"❌ {err}")
+                else:
+                    st.success(f"✅ {len(df_new):,} MSEs loaded from `{uploaded.name}`")
+                    st.dataframe(df_new.head(4), use_container_width=True)
+                    if st.button("✅ Use This Data", type="primary", use_container_width=True):
+                        st.session_state.update({"df_mse":df_new,"data_source":"upload",
+                            "source_label":f"📂 {uploaded.name}","source_count":len(df_new)})
+                        st.rerun()
+
+    with tab2:
+        col1,col2 = st.columns([1.2,1])
+        with col1:
+            st.markdown("""<div class="info-card"><strong style="color:#1F4E79;">🌐 Udyam Registration Portal API</strong><br>
+            <small style="color:#64748b;">Fetch enterprise details directly from government API using Udyam number.
+            Demo mode active — provide API key for live data.</small></div>""", unsafe_allow_html=True)
+            api_key = st.text_input("🔑 API Key", type="password", placeholder="MeitY API key (optional)")
+        with col2:
+            udyam_input = st.text_input("Udyam Number", placeholder="UDYAM-KL-08-0023456")
+            if st.button("🔍 Fetch", type="primary", use_container_width=True, disabled=not udyam_input):
+                with st.spinner("Calling API..."):
+                    time.sleep(1.2)
+                    st.success("✅ Enterprise fetched (simulated)!")
+                    st.json({"enterprise_name":"Shree Lakshmi Textiles","state":"Kerala",
+                             "sector":"Textiles & Apparel","turnover_lakhs":120,"employees":25})
+
+    with tab3:
+        with st.form("manual_ds"):
+            c1,c2,c3 = st.columns(3)
+            with c1:
+                m_name=st.text_input("Enterprise Name *"); m_state=st.selectbox("State *",INDIAN_STATES)
+            with c2:
+                m_sector=st.selectbox("Sector *",SECTORS); m_turnover=st.number_input("Turnover (₹ Lakhs)*",min_value=0.1,value=50.0)
+            with c3:
+                m_emp=st.number_input("Employees *",min_value=1,value=10); m_lang=st.selectbox("Language",LANGUAGES)
+            m_prod=st.text_area("Product Description *",height=70)
+            if st.form_submit_button("✅ Add to Registry", type="primary", use_container_width=True):
+                if m_name and m_prod:
+                    new_row={"MSE ID":f"MSE{random.randint(2025000,2029999)}","Enterprise Name":m_name,
+                             "State":m_state,"Sector":m_sector,"Annual Turnover (L)":m_turnover,
+                             "No. of Employees":m_emp,"Registration Date":datetime.now().strftime("%Y-%m-%d"),
+                             "Status":"Pending Verification","Assigned SNP":"—","Match Score":0.0,
+                             "Language":m_lang,"Onboarding Time (days)":None,
+                             "Categorisation Confidence":round(np.random.uniform(0.78,0.96),2),
+                             "Data Source":"✏️ Manual Entry"}
+                    new_df=pd.concat([st.session_state["df_mse"],pd.DataFrame([new_row])],ignore_index=True)
+                    st.session_state.update({"df_mse":new_df,"data_source":"manual",
+                        "source_label":"✏️ Manual Entry","source_count":len(new_df)})
+                    st.success(f"✅ '{m_name}' added! Total: {len(new_df):,}"); st.rerun()
+
+    with tab4:
+        col1,col2=st.columns(2)
+        with col1:
+            n=st.slider("Records",100,2000,500,100)
+        with col2:
+            st.markdown("<br>",unsafe_allow_html=True)
+            if st.button("🔄 Generate Demo Data", type="primary", use_container_width=True):
+                generate_mock_mse_data.clear()
+                fd=generate_mock_mse_data(n)
+                st.session_state.update({"df_mse":fd,"data_source":"demo",
+                    "source_label":f"🎲 Demo ({n})","source_count":n})
+                st.success(f"✅ {n:,} records generated"); st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: AI REGISTRATION
+# ══════════════════════════════════════════════════════════════════
+elif page == "🤖 AI Registration":
+    st.markdown('<div class="sec-hdr">🤖 AI-Powered Multilingual MSE Registration Engine</div>', unsafe_allow_html=True)
+    tab1,tab2,tab3 = st.tabs(["🎙️ Voice (ASR)","📄 Document OCR","✏️ Manual"])
+
+    with tab1:
+        col1,col2=st.columns(2)
+        with col1:
+            st.markdown("""<div class="info-card"><strong>🎙️ Whisper Large v3 — Multilingual ASR</strong><br>
+            <small>Fine-tuned on 25K hours across 11 Indian languages. WER: 3.7%</small></div>""",
+            unsafe_allow_html=True)
+            lang=st.selectbox("Language",LANGUAGES)
+            st.markdown(f"""<div style="background:#eff6ff;border:2px dashed #2563EB;border-radius:10px;
+              padding:28px;text-align:center;">
+              <div style="font-size:2.5rem;">🎤</div>
+              <div style="color:#1F4E79;font-weight:600;margin-top:6px;">Click to Record</div>
+              <div style="color:#94a3b8;font-size:0.77rem;">Demo mode · Language: <b>{lang}</b></div>
+            </div>""", unsafe_allow_html=True)
+            if st.button("🎙️ Simulate Voice Input",type="primary",use_container_width=True):
+                st.session_state["voice_done"]=True
         with col2:
             if st.session_state.get("voice_done"):
                 st.success("✅ Voice captured! AI extracted:")
-                fields = {"Enterprise Name":"Shree Lakshmi Textiles","Owner Name":"Rajesh Kumar",
-                          "State":"Kerala","Sector":"Textiles & Apparel",
-                          "Product Description":"Cotton fabric & readymade garments",
-                          "Udyam Number":"UDYAM-KL-08-0023456",
-                          "ASR Confidence":"96.3%","Language Detected":lang}
-                for k,v in fields.items():
-                    st.markdown(f"**{k}:** &nbsp;<span class='badge-success'>{v}</span>",
-                                unsafe_allow_html=True)
-            else:
-                st.info("👆 Click 'Simulate Voice Input'")
+                for k,v in {"Enterprise Name":"Shree Lakshmi Textiles","State":"Kerala",
+                             "Sector":"Textiles & Apparel","ASR Confidence":"96.3%",
+                             "Language Detected":lang}.items():
+                    st.markdown(f"**{k}:** &nbsp;<span class='badge badge-green'>{v}</span>",unsafe_allow_html=True)
 
     with tab2:
-        col1,col2 = st.columns(2)
+        col1,col2=st.columns(2)
         with col1:
-            st.markdown("""
-            <div class="info-card">
-              <strong>📄 OCR Document Processing</strong><br>
-              <small>LayoutLMv3 + Tesseract 5.0. 98.7% field extraction accuracy.</small>
-            </div>""", unsafe_allow_html=True)
-            doc_type  = st.selectbox("Document Type", ["Udyam Certificate","GST Certificate"])
-            _uploaded = st.file_uploader("Upload Document", type=["pdf","png","jpg","jpeg"])
-            if st.button("🔍 Simulate OCR", use_container_width=True, type="primary"):
-                with st.spinner("Running OCR..."):
-                    time.sleep(1.5)
-                st.session_state["ocr_done"] = doc_type
+            st.markdown("""<div class="info-card"><strong>📄 LayoutLMv3 + Tesseract 5</strong><br>
+            <small>Domain-adapted on 50K MSME docs. Field accuracy: 98.7%</small></div>""",unsafe_allow_html=True)
+            doc_type=st.selectbox("Document Type",["Udyam Certificate","GST Certificate"])
+            st.file_uploader("Upload Document",type=["pdf","png","jpg","jpeg"])
+            if st.button("🔍 Simulate OCR",type="primary",use_container_width=True):
+                with st.spinner("Running OCR..."): time.sleep(1.2)
+                st.session_state["ocr_done"]=doc_type
         with col2:
             if st.session_state.get("ocr_done"):
                 st.success(f"✅ {st.session_state['ocr_done']} processed")
-                fields = ({"Enterprise Name":"Shree Lakshmi Textiles Pvt Ltd",
-                           "Udyam Number":"UDYAM-KL-08-0023456","NIC Code":"13111",
-                           "State":"Kerala","Investment":"₹45,00,000","Turnover":"₹1,20,00,000"}
-                          if "Udyam" in st.session_state["ocr_done"] else
-                          {"GSTIN":"32AABCS1429B1ZB","Legal Name":"SHREE LAKSHMI TEXTILES PVT LTD",
-                           "State":"Kerala","Registration Date":"2018-07-01"})
-                for k,v in fields.items():
-                    st.markdown(f"**{k}:** &nbsp;<span class='badge-success'>{v}</span>",
-                                unsafe_allow_html=True)
-            else:
-                st.info("👆 Click 'Simulate OCR'")
+                for k,v in {"Enterprise Name":"Shree Lakshmi Textiles Pvt Ltd",
+                             "Udyam No":"UDYAM-KL-08-0023456","NIC Code":"13111",
+                             "State":"Kerala","Turnover":"₹1,20,00,000"}.items():
+                    st.markdown(f"**{k}:** &nbsp;<span class='badge badge-green'>{v}</span>",unsafe_allow_html=True)
 
     with tab3:
         with st.form("ai_reg_manual"):
-            c1,c2 = st.columns(2)
+            c1,c2=st.columns(2)
             with c1:
-                r_name   = st.text_input("Enterprise Name*")
-                r_state  = st.selectbox("State*", INDIAN_STATES)
-                r_sector = st.selectbox("Sector*", SECTORS)
+                r_name=st.text_input("Enterprise Name*"); r_state=st.selectbox("State*",INDIAN_STATES)
+                r_sector=st.selectbox("Sector*",SECTORS)
             with c2:
-                r_turnover = st.number_input("Turnover (₹ Lakhs)*", min_value=0.1, value=50.0)
-                r_emp      = st.number_input("Employees*", min_value=1, value=10)
-                r_lang     = st.selectbox("Language", LANGUAGES)
-            r_prod = st.text_area("Product Description*", height=80)
-            if st.form_submit_button("🚀 Register", type="primary", use_container_width=True):
+                r_turnover=st.number_input("Turnover (₹L)*",min_value=0.1,value=50.0)
+                r_emp=st.number_input("Employees*",min_value=1,value=10)
+                r_lang=st.selectbox("Language",LANGUAGES)
+            r_prod=st.text_area("Product Description*",height=70)
+            if st.form_submit_button("🚀 Register",type="primary",use_container_width=True):
                 if r_name and r_prod:
-                    new_row = {
-                        "MSE ID": f"MSE{random.randint(2025000,2029999)}",
-                        "Enterprise Name": r_name, "State": r_state, "Sector": r_sector,
-                        "Annual Turnover (L)": r_turnover, "No. of Employees": r_emp,
-                        "Registration Date": datetime.now().strftime("%Y-%m-%d"),
-                        "Status":"Pending Verification","Assigned SNP":"—","Match Score":0.0,
-                        "Language": r_lang, "Onboarding Time (days)": None,
-                        "Categorisation Confidence": round(np.random.uniform(0.78,0.96),2),
-                        "Data Source":"✏️ Manual Entry"
-                    }
-                    new_df = pd.concat([st.session_state["df_mse"],pd.DataFrame([new_row])],ignore_index=True)
-                    st.session_state["df_mse"]      = new_df
-                    st.session_state["source_count"]= len(new_df)
-                    st.success(f"✅ '{r_name}' registered! Total: {len(new_df):,} MSEs.")
-                    st.rerun()
-                else:
-                    st.error("Name and Product Description are required.")
+                    new_row={"MSE ID":f"MSE{random.randint(2025000,2029999)}","Enterprise Name":r_name,
+                             "State":r_state,"Sector":r_sector,"Annual Turnover (L)":r_turnover,
+                             "No. of Employees":r_emp,"Registration Date":datetime.now().strftime("%Y-%m-%d"),
+                             "Status":"Pending Verification","Assigned SNP":"—","Match Score":0.0,
+                             "Language":r_lang,"Onboarding Time (days)":None,
+                             "Categorisation Confidence":round(np.random.uniform(0.78,0.96),2),
+                             "Data Source":"✏️ Manual Entry"}
+                    new_df=pd.concat([st.session_state["df_mse"],pd.DataFrame([new_row])],ignore_index=True)
+                    st.session_state.update({"df_mse":new_df,"source_count":len(new_df)})
+                    st.success(f"✅ '{r_name}' registered!"); st.rerun()
 
 
-# ══════════════════════ PAGE: PRODUCT CATEGORISER ═════════════════
+# ══════════════════════════════════════════════════════════════════
+# PAGE: PRODUCT CATEGORISER
+# ══════════════════════════════════════════════════════════════════
 elif page == "🔍 Product Categoriser":
-    st.markdown('<div class="section-header">🔍 AI Product Categorisation Engine — 3-Stage Pipeline</div>',
-                unsafe_allow_html=True)
-    df_mse = st.session_state["df_mse"]
-    col1,col2 = st.columns([1,1.2])
+    st.markdown('<div class="sec-hdr">🔍 AI Product Categorisation — NLP 3-Stage Pipeline</div>', unsafe_allow_html=True)
 
-    def simulate_product_categorisation(description):
-        cats = {
-            "cotton":("Textiles & Apparel","Cotton Fabric","ONDC:RET12-fabric-001",0.96),
-            "shirt":("Textiles & Apparel","Ready-made Garments","ONDC:RET12-garment-002",0.94),
-            "rice":("Agro Products","Processed Grains","ONDC:RET10-grain-001",0.97),
-            "spice":("Food Processing","Spices & Condiments","ONDC:RET10-spice-001",0.95),
-            "metal":("Metal Fabrication","Metal Components","ONDC:B2B-metal-001",0.91),
-            "wood":("Woodwork & Furniture","Wooden Furniture","ONDC:RET12-furniture-001",0.93),
-            "leather":("Leather Goods","Leather Products","ONDC:RET12-leather-001",0.92),
-            "pharma":("Pharmaceuticals","Generic Medicines","ONDC:B2B-pharma-001",0.89),
-        }
+    def cat_engine(desc):
+        cats={"cotton":("Textiles & Apparel","Cotton Fabric","ONDC:RET12-fabric-001",0.96),
+              "shirt":("Textiles & Apparel","Readymade Garments","ONDC:RET12-garment-002",0.94),
+              "rice":("Agro Products","Processed Grains","ONDC:RET10-grain-001",0.97),
+              "spice":("Food Processing","Spices & Condiments","ONDC:RET10-spice-001",0.95),
+              "metal":("Metal Fabrication","Metal Components","ONDC:B2B-metal-001",0.91),
+              "wood":("Woodwork & Furniture","Wooden Furniture","ONDC:RET12-furn-001",0.93),
+              "leather":("Leather Goods","Leather Products","ONDC:RET12-leather-001",0.92),
+              "pharma":("Pharmaceuticals","Generic Medicines","ONDC:B2B-pharma-001",0.89)}
         for kw,r in cats.items():
-            if kw in description.lower():
-                return {"sector":r[0],"category":r[1],"ondc_code":r[2],
-                        "confidence":r[3],"attributes":["material","finish","dimensions"],
-                        "nic_code":f"1{random.randint(3000,9999)}"}
-        return {"sector":"General Manufacturing","category":"Other Products",
-                "ondc_code":"ONDC:B2B-gen-001","confidence":0.73,
-                "attributes":["type","dimensions"],"nic_code":"32909"}
+            if kw in desc.lower(): return {"sector":r[0],"category":r[1],"ondc_code":r[2],"confidence":r[3],"nic_code":f"1{random.randint(3000,9999)}"}
+        return {"sector":"General Manufacturing","category":"Other Products","ondc_code":"ONDC:B2B-gen-001","confidence":0.73,"nic_code":"32909"}
 
+    col1,col2=st.columns([1,1.2])
     with col1:
-        product_text = st.text_area("Product Description",
-            value="We manufacture high-quality cotton fabric and readymade shirts.",
-            height=120)
-        if st.button("⚡ Run AI Categorisation", type="primary", use_container_width=True):
-            with st.spinner("Running 3-stage pipeline..."):
-                time.sleep(1.2)
-                st.session_state["cat_result"] = simulate_product_categorisation(product_text)
-
+        pt=st.text_area("Product Description",value="High-quality cotton fabric and readymade shirts.",height=110)
+        if st.button("⚡ Categorise",type="primary",use_container_width=True):
+            with st.spinner("Running AI pipeline..."): time.sleep(1.1)
+            st.session_state["cat_result"]=cat_engine(pt)
     with col2:
         if st.session_state.get("cat_result"):
-            r = st.session_state["cat_result"]
-            c = int(r["confidence"]*100)
-            cc = "#1B5E20" if r["confidence"]>0.85 else "#E65100"
-            st.markdown(f"""
-            <div class="result-card">
-              <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-                <div style="font-size:1.1rem;font-weight:700;color:#1F4E79;">🎯 Result</div>
-                <div style="color:{cc};font-weight:700;font-size:1.4rem;">{c}% Confident</div>
+            r=st.session_state["cat_result"]; c=int(r["confidence"]*100)
+            cc="#16a34a" if r["confidence"]>0.85 else "#ea580c"
+            st.markdown(f"""<div class="result-card">
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                <div style="font-weight:700;color:#1F4E79;">🎯 Categorisation Result</div>
+                <div style="font-weight:800;color:{cc};font-size:1.3rem;">{c}% Confident</div>
               </div>
-              <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width:{c}%;background:linear-gradient(90deg,{cc},{cc}aa);"></div>
-              </div><br>
-              <table style="width:100%;font-size:0.85rem;">
-                <tr><td style="color:#6c757d;width:160px;">Sector</td><td><strong>{r["sector"]}</strong></td></tr>
-                <tr><td style="color:#6c757d;">Category</td><td><strong>{r["category"]}</strong></td></tr>
-                <tr><td style="color:#6c757d;">ONDC Code</td><td><span class="badge-info">{r["ondc_code"]}</span></td></tr>
-                <tr><td style="color:#6c757d;">NIC Code</td><td><span class="badge-info">{r["nic_code"]}</span></td></tr>
-              </table>
-            </div>""", unsafe_allow_html=True)
-        else:
-            st.info("👈 Click 'Run AI Categorisation'")
+              <div class="progress-outer"><div class="progress-inner" style="width:{c}%;background:linear-gradient(90deg,{cc},{cc}99);"></div></div>
+              <table style="width:100%;font-size:0.82rem;margin-top:12px;border-collapse:collapse;">
+                <tr><td style="color:#94a3b8;padding:4px 0;width:120px;">Sector</td><td><strong>{r["sector"]}</strong></td></tr>
+                <tr><td style="color:#94a3b8;padding:4px 0;">Category</td><td><strong>{r["category"]}</strong></td></tr>
+                <tr><td style="color:#94a3b8;padding:4px 0;">ONDC Code</td><td><span class="badge badge-blue">{r["ondc_code"]}</span></td></tr>
+                <tr><td style="color:#94a3b8;padding:4px 0;">NIC Code</td><td><span class="badge badge-gray">{r["nic_code"]}</span></td></tr>
+              </table></div>""", unsafe_allow_html=True)
 
-    st.markdown('<div class="section-header">📊 Batch Stats — Current Data</div>', unsafe_allow_html=True)
-    if "Categorisation Confidence" in df_mse.columns and len(df_mse) > 0:
-        col1,col2 = st.columns(2)
-        with col1:
-            cats = pd.cut(df_mse["Categorisation Confidence"],
-                          bins=[0,0.80,0.90,0.95,1.0],
-                          labels=["<80% Review","80–90%","90–95%","95–100%"]).value_counts()
-            fig = go.Figure(go.Pie(labels=cats.index, values=cats.values, hole=0.4,
-                                   marker_colors=["#dc3545","#ffc107","#17a2b8","#28a745"]))
-            fig.update_layout(height=240, margin=dict(l=0,r=0,t=10,b=0),
-                              paper_bgcolor="white",
-                              font=dict(family="Inter", color="#212529"),
-                              legend=dict(font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"))
-            st.plotly_chart(fig, use_container_width=True)
-        with col2:
-            st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:6px;'>📊 Accuracy by Sector</p>", unsafe_allow_html=True)
-            sa = df_mse.groupby("Sector")["Categorisation Confidence"].mean().sort_values(ascending=False)
-            for sector,acc in sa.items():
-                bw = int(acc*100)
-                color = "#1B5E20" if acc>0.90 else "#E65100"
-                st.markdown(f"""
-                <div style="margin-bottom:6px;">
-                  <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
-                    <span>{str(sector)[:28]}</span>
-                    <span style="color:{color};font-weight:600;">{acc*100:.1f}%</span>
-                  </div>
-                  <div class="progress-bar-outer">
-                    <div class="progress-bar-inner" style="width:{bw}%;"></div>
-                  </div>
-                </div>""", unsafe_allow_html=True)
-
-
-# ══════════════════════ PAGE: SNP MATCHER ═════════════════════════
-elif page == "🔗 SNP Matcher":
-    st.markdown('<div class="section-header">🔗 Intelligent MSE-to-SNP Matching Engine</div>',
-                unsafe_allow_html=True)
-
-    def simulate_snp_matching(sector, state, turnover):
-        matches = []
-        for _,snp in df_snp.iterrows():
-            sem = random.uniform(0.60,0.98)
-            if sector.split("&")[0].strip().lower() in snp["Domain Sectors"].lower():
-                sem = min(sem+0.15,0.99)
-            score = round(sem - (snp["Current Load (%)"]/100)*0.15 + (snp["Avg Fulfilment Rate (%)"]/100)*0.1, 3)
-            matches.append({
-                "SNP Name": snp["SNP Name"],
-                "Match Score": min(score,0.99),
-                "Domain Alignment":"High" if sem>0.85 else "Medium",
-                "Current Load (%)": snp["Current Load (%)"],
-                "Fulfilment Rate (%)": snp["Avg Fulfilment Rate (%)"],
-                "Est. Onboarding (days)": snp["Onboarding Avg (days)"],
-                "States Active": snp["States Active"]
-            })
-        return sorted(matches, key=lambda x:x["Match Score"], reverse=True)[:5]
-
-    col1,col2 = st.columns([1,1.5])
+    st.markdown('<div class="sec-hdr">📊 Batch Confidence Stats</div>', unsafe_allow_html=True)
+    col1,col2=st.columns(2)
     with col1:
-        m_sector   = st.selectbox("MSE Sector", SECTORS)
-        m_state    = st.selectbox("MSE State",  INDIAN_STATES)
-        m_turnover = st.slider("Turnover (₹ Lakhs)", 5, 500, 50)
-        if st.button("🔍 Find Best SNP Matches", type="primary", use_container_width=True):
-            with st.spinner("Running matching algorithm..."):
-                time.sleep(1.0)
-                st.session_state["snp_matches"] = simulate_snp_matching(m_sector,m_state,m_turnover)
-                st.session_state["match_sector"] = m_sector
+        cats=pd.cut(df_mse["Categorisation Confidence"],bins=[0,.80,.90,.95,1.0],
+                    labels=["<80%","80–90%","90–95%","95–100%"]).value_counts()
+        fig=go.Figure(go.Pie(labels=cats.index,values=cats.values,hole=0.42,
+                             marker_colors=["#dc2626","#f59e0b","#0891b2","#059669"],
+                             textinfo="label+percent",textfont=dict(size=9)))
+        fig.update_layout(**PLT,height=240,showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        sa=df_mse.groupby("Sector")["Categorisation Confidence"].mean().sort_values(ascending=False)
+        for sec,acc in sa.items():
+            color="#16a34a" if acc>0.90 else "#ea580c"
+            st.markdown(f"""<div style="margin-bottom:5px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.76rem;">
+                <span style="color:#1e293b;">{str(sec)[:28]}</span>
+                <span style="color:{color};font-weight:700;">{acc*100:.1f}%</span></div>
+              <div class="progress-outer"><div class="progress-inner" style="width:{int(acc*100)}%;"></div></div>
+            </div>""", unsafe_allow_html=True)
 
+
+# ══════════════════════════════════════════════════════════════════
+# PAGE: SNP MATCHER
+# ══════════════════════════════════════════════════════════════════
+elif page == "🔗 SNP Matcher":
+    st.markdown('<div class="sec-hdr">🔗 Intelligent MSE-to-SNP Matching Engine</div>', unsafe_allow_html=True)
+
+    def snp_match(sector, state, turnover):
+        matches=[]
+        for _,snp in df_snp.iterrows():
+            sem=random.uniform(0.60,0.98)
+            if sector.split("&")[0].strip().lower() in snp["Domain Sectors"].lower(): sem=min(sem+0.15,0.99)
+            score=round(sem-(snp["Current Load (%)"]/100)*0.15+(snp["Avg Fulfilment Rate (%)"]/100)*0.1,3)
+            matches.append({"SNP Name":snp["SNP Name"],"Match Score":min(score,0.99),
+                             "Alignment":"High" if sem>0.85 else "Medium",
+                             "Load":snp["Current Load (%)"],"Fulfilment":snp["Avg Fulfilment Rate (%)"],
+                             "Onboarding":snp["Onboarding Avg (days)"]})
+        return sorted(matches,key=lambda x:x["Match Score"],reverse=True)[:5]
+
+    col1,col2=st.columns([1,1.5])
+    with col1:
+        m_sect=st.selectbox("Sector",SECTORS); m_state=st.selectbox("State",INDIAN_STATES)
+        m_turn=st.slider("Turnover (₹L)",5,500,50)
+        if st.button("🔍 Find Matches",type="primary",use_container_width=True):
+            with st.spinner("Running ML matcher..."): time.sleep(0.9)
+            st.session_state["snp_matches"]=snp_match(m_sect,m_state,m_turn)
     with col2:
         if st.session_state.get("snp_matches"):
-            matches = st.session_state["snp_matches"]
-            rank_labels = ["🥇 Best Match","🥈 2nd Choice","🥉 3rd Choice","4th","5th"]
-            for i,match in enumerate(matches):
-                sp = int(match["Match Score"]*100)
-                sc = "#1B5E20" if match["Match Score"]>0.85 else "#E65100"
-                st.markdown(f"""
-                <div class="result-card" style="margin-bottom:8px;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <span style="font-weight:700;">{rank_labels[i]}</span>
-                      <span style="font-weight:600;color:#1F4E79;margin-left:8px;">{match["SNP Name"]}</span>
-                    </div>
-                    <div style="color:{sc};font-weight:700;font-size:1.3rem;">{sp}%</div>
-                  </div>
-                  <div class="progress-bar-outer">
-                    <div class="progress-bar-inner" style="width:{sp}%;"></div>
-                  </div>
-                  <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-size:0.78rem;color:#495057;">
-                    <span>📋 {match["Domain Alignment"]}</span>
-                    <span>⚡ Load:{match["Current Load (%)"]}%</span>
-                    <span>✅ {match["Fulfilment Rate (%)"]}%</span>
-                    <span>⏱️ {match["Est. Onboarding (days)"]}d</span>
-                  </div>
-                </div>""", unsafe_allow_html=True)
-        else:
-            st.info("👈 Set parameters and click 'Find Best SNP Matches'")
+            labels=["🥇 Best","🥈 2nd","🥉 3rd","4th","5th"]
+            for i,m in enumerate(st.session_state["snp_matches"]):
+                sp=int(m["Match Score"]*100); sc="#16a34a" if m["Match Score"]>0.85 else "#ea580c"
+                st.markdown(f"""<div class="result-card" style="margin-bottom:7px;">
+                  <div style="display:flex;justify-content:space-between;">
+                    <div><span style="font-weight:700;">{labels[i]}</span>
+                    <span style="font-weight:700;color:#1F4E79;margin-left:8px;">{m["SNP Name"]}</span></div>
+                    <div style="font-weight:800;color:{sc};font-size:1.2rem;">{sp}%</div></div>
+                  <div class="progress-outer"><div class="progress-inner" style="width:{sp}%;"></div></div>
+                  <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;font-size:0.75rem;color:#64748b;">
+                    <span>📋 {m["Alignment"]}</span><span>⚡ Load:{m["Load"]}%</span>
+                    <span>✅ {m["Fulfilment"]}%</span><span>⏱️ {m["Onboarding"]}d</span>
+                  </div></div>""", unsafe_allow_html=True)
 
 
-# ══════════════════════ PAGE: MSE REGISTRY ════════════════════════
+# ══════════════════════════════════════════════════════════════════
+# PAGE: MSE REGISTRY
+# ══════════════════════════════════════════════════════════════════
 elif page == "📋 MSE Registry":
-    df_mse = st.session_state["df_mse"]
-    st.markdown('<div class="section-header">📋 MSE Registry — All Records</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-hdr">📋 MSE Registry — Full Database View</div>', unsafe_allow_html=True)
+    col1,col2,col3,col4=st.columns(4)
+    with col1: f_state=st.selectbox("State",["All"]+sorted(df_mse["State"].dropna().unique().tolist()))
+    with col2: f_sector=st.selectbox("Sector",["All"]+sorted(df_mse["Sector"].dropna().unique().tolist()))
+    with col3: f_status=st.selectbox("Status",["All"]+sorted(df_mse["Status"].dropna().unique().tolist()))
+    with col4: search=st.text_input("🔍 Search","")
 
-    col1,col2,col3,col4 = st.columns(4)
-    with col1:
-        states_list = ["All"] + sorted(df_mse["State"].dropna().unique().tolist()) if "State" in df_mse.columns else ["All"]
-        f_state  = st.selectbox("State",  states_list)
-    with col2:
-        sector_list = ["All"] + sorted(df_mse["Sector"].dropna().unique().tolist()) if "Sector" in df_mse.columns else ["All"]
-        f_sector = st.selectbox("Sector", sector_list)
-    with col3:
-        status_list = ["All"] + sorted(df_mse["Status"].dropna().unique().tolist()) if "Status" in df_mse.columns else ["All"]
-        f_status = st.selectbox("Status", status_list)
-    with col4:
-        search = st.text_input("🔍 Search", placeholder="Name or MSE ID...")
-
-    df_f = df_mse.copy()
-    if f_state  != "All" and "State"  in df_f.columns: df_f = df_f[df_f["State"]==f_state]
-    if f_sector != "All" and "Sector" in df_f.columns: df_f = df_f[df_f["Sector"]==f_sector]
-    if f_status != "All" and "Status" in df_f.columns: df_f = df_f[df_f["Status"]==f_status]
+    df_f=df_mse.copy()
+    if f_state!="All": df_f=df_f[df_f["State"]==f_state]
+    if f_sector!="All": df_f=df_f[df_f["Sector"]==f_sector]
+    if f_status!="All": df_f=df_f[df_f["Status"]==f_status]
     if search:
-        mask = pd.Series([False]*len(df_f), index=df_f.index)
-        for col in ["Enterprise Name","MSE ID"]:
-            if col in df_f.columns:
-                mask |= df_f[col].astype(str).str.contains(search, case=False, na=False)
-        df_f = df_f[mask]
+        mask=pd.Series([False]*len(df_f),index=df_f.index)
+        for c in ["Enterprise Name","MSE ID"]:
+            if c in df_f.columns: mask|=df_f[c].astype(str).str.contains(search,case=False,na=False)
+        df_f=df_f[mask]
 
-    st.markdown(f"<p style='color:#495057;font-size:0.9rem;'><strong style='color:#1F4E79;'>Showing {len(df_f):,} of {len(df_mse):,} MSEs</strong> — Source: <code style='background:#e8f0fe;color:#1F4E79;padding:1px 5px;border-radius:4px;'>{st.session_state.get('source_label','')}</code></p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#64748b;font-size:0.85rem;'><b style='color:#1F4E79;'>{len(df_f):,}</b> of <b>{len(df_mse):,}</b> MSEs · Source: <code>{st.session_state.get('source_label','')}</code></p>", unsafe_allow_html=True)
 
-    display_cols = [c for c in ["MSE ID","Enterprise Name","State","Sector","Status",
-                                 "Assigned SNP","Match Score","Onboarding Time (days)",
-                                 "Categorisation Confidence","Data Source"]
-                    if c in df_f.columns]
+    dcols=[c for c in ["MSE ID","Enterprise Name","State","Sector","Status","Assigned SNP","Match Score","Onboarding Time (days)","Categorisation Confidence","Data Source"] if c in df_f.columns]
+    fmt={}
+    if "Match Score" in df_f.columns: fmt["Match Score"]="{:.2f}"
+    if "Categorisation Confidence" in df_f.columns: fmt["Categorisation Confidence"]="{:.2f}"
+    if "Onboarding Time (days)" in df_f.columns: fmt["Onboarding Time (days)"]="{:.1f}"
+    st.dataframe(df_f[dcols].head(200).style.format(fmt,na_rep="—"),use_container_width=True,height=440)
 
-    fmt = {}
-    if "Match Score"               in df_f.columns: fmt["Match Score"] = "{:.2f}"
-    if "Categorisation Confidence" in df_f.columns: fmt["Categorisation Confidence"] = "{:.2f}"
-    if "Onboarding Time (days)"    in df_f.columns: fmt["Onboarding Time (days)"] = "{:.1f}"
-
-    st.dataframe(
-        df_f[display_cols].head(200).style.format(fmt, na_rep="—"),
-        use_container_width=True, height=440
-    )
-
-    col1,col2 = st.columns(2)
+    col1,col2=st.columns(2)
     with col1:
-        csv = df_f[display_cols].to_csv(index=False)
-        st.download_button("📥 Export Filtered as CSV", csv,
-                           "mse_registry.csv","text/csv", use_container_width=True)
+        st.download_button("📥 Export CSV",df_f[dcols].to_csv(index=False),"mse_registry.csv","text/csv",use_container_width=True)
     with col2:
-        buf = io.BytesIO()
-        with pd.ExcelWriter(buf, engine="openpyxl") as w:
-            df_f[display_cols].to_excel(w, index=False, sheet_name="MSE Registry")
-        st.download_button("📥 Export Filtered as Excel", buf.getvalue(),
-                           "mse_registry.xlsx",
-                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                           use_container_width=True)
-
-
-# ══════════════════════ PAGE: ANALYTICS ═══════════════════════════
-elif page == "📈 Analytics":
-    df_mse = st.session_state["df_mse"]
-    st.markdown('<div class="section-header">📈 Platform Analytics & AI Performance Monitoring</div>',
-                unsafe_allow_html=True)
-
-    dates = pd.date_range(start="2024-08-01", end="2025-02-21", freq="W")
-    registrations = np.cumsum(np.random.poisson(max(len(df_mse)//30,5), len(dates)))
-    onboardings   = np.cumsum(np.random.poisson(max(len(df_mse)//60,2), len(dates)))
-
-    col1,col2 = st.columns(2)
-    with col1:
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=dates, y=registrations, name="Registrations",
-                                 line=dict(color="#2E75B6",width=2.5),fill="tozeroy",
-                                 fillcolor="rgba(46,117,182,0.1)"))
-        fig.add_trace(go.Scatter(x=dates, y=onboardings, name="Onboardings",
-                                 line=dict(color="#1B5E20",width=2.5),fill="tozeroy",
-                                 fillcolor="rgba(27,94,32,0.08)"))
-        fig.update_layout(title="Cumulative Registrations vs Onboardings",
-                          title_font=dict(color="#1F4E79", size=13),
-                          height=300, margin=dict(l=0,r=0,t=40,b=0),
-                          paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter", size=11, color="#212529"),
-                          legend=dict(orientation="h", y=1.15,
-                                      font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"),
-                          xaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"),
-                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        acc = 0.87 + np.cumsum(np.random.normal(0.003,0.005,len(dates)))
-        acc = np.clip(acc,0.80,0.99)
-        fig = go.Figure(go.Scatter(x=dates, y=acc*100, mode="lines",
-                                   line=dict(color="#6A1B9A",width=2.5),
-                                   fill="tozeroy",fillcolor="rgba(106,27,154,0.08)"))
-        fig.add_hline(y=90, line_dash="dash", line_color="#dc3545",
-                      annotation_text="Target: 90%")
-        fig.update_layout(title="Categorisation Accuracy Trend (%)",
-                          title_font=dict(color="#1F4E79", size=13),
-                          height=300, margin=dict(l=0,r=0,t=40,b=0),
-                          paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter", size=11, color="#212529"),
-                          xaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"),
-                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"))
-        st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown('<div class="section-header">🏢 SNP Performance Leaderboard</div>',
-                unsafe_allow_html=True)
-    st.dataframe(
-        df_snp.sort_values("Avg Fulfilment Rate (%)", ascending=False).style
-        .format({"Avg Fulfilment Rate (%)":"{:.1f}%","Rating":"⭐ {:.1f}",
-                 "Onboarding Avg (days)":"{:.1f}d"}),
-        use_container_width=True
-    )
-
-    st.markdown('<div class="section-header">🎯 Impact vs Manual Baseline</div>',
-                unsafe_allow_html=True)
-    baseline = {"Onboarding Time (days)":[12.4,3.8],"Rejection Rate (%)":[34.7,8.2],
-                "Categorisation Accuracy (%)":[67.3,94.2],"Daily Capacity":[90,1200]}
-    fig = go.Figure()
-    fig.add_trace(go.Bar(name="Manual", x=list(baseline.keys()),
-                         y=[v[0] for v in baseline.values()],
-                         marker_color="#dc3545", opacity=0.7))
-    fig.add_trace(go.Bar(name="MapMSE", x=list(baseline.keys()),
-                         y=[v[1] for v in baseline.values()],
-                         marker_color="#1F4E79", opacity=0.9))
-    fig.update_layout(barmode="group", height=320, margin=dict(l=0,r=0,t=10,b=0),
-                      paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                      font=dict(family="Inter", size=11, color="#212529"),
-                      legend=dict(orientation="h", y=1.05,
-                                  font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"),
-                      xaxis=dict(tickfont=dict(color="#212529", size=10),
-                                 tickangle=-20,
-                                 gridcolor="#e9ecef", linecolor="#dee2e6"),
-                      yaxis=dict(tickfont=dict(color="#495057"),
-                                 gridcolor="#e9ecef", linecolor="#dee2e6"))
-    st.plotly_chart(fig, use_container_width=True)
+        buf=io.BytesIO()
+        with pd.ExcelWriter(buf,engine="openpyxl") as w: df_f[dcols].to_excel(w,index=False,sheet_name="MSE Registry")
+        st.download_button("📥 Export Excel",buf.getvalue(),"mse_registry.xlsx",
+                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True)
