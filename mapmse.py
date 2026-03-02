@@ -42,7 +42,7 @@ st.markdown("""
   html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
   .stApp { background: #f0f4f8; }
 
-  /* ══ SIDEBAR — white text, never bleeds into main ══ */
+  /* ── Sidebar: scoped so it never bleeds into main content ── */
   section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1F4E79 0%, #2E75B6 100%) !important;
   }
@@ -52,93 +52,22 @@ st.markdown("""
   section[data-testid="stSidebar"] div,
   section[data-testid="stSidebar"] small,
   section[data-testid="stSidebar"] li,
-  section[data-testid="stSidebar"] a,
-  section[data-testid="stSidebar"] strong,
-  section[data-testid="stSidebar"] em { color: #ffffff !important; }
+  section[data-testid="stSidebar"] a { color: #ffffff !important; }
 
-  /* ══ MAIN CONTENT — nuclear text color enforcement ══
-     Covers every Streamlit text path so theme cannot
-     override and make text invisible on light background */
-
-  /* Headings */
-  h1, h2, .stMarkdown h1, .stMarkdown h2,
-  [data-testid="stMarkdownContainer"] h1,
-  [data-testid="stMarkdownContainer"] h2 {
-    color: #1F4E79 !important; font-weight: 700 !important;
-  }
-  h3, h4, h5, h6, .stMarkdown h3,
-  [data-testid="stMarkdownContainer"] h3,
-  [data-testid="stMarkdownContainer"] h4 {
-    color: #2E75B6 !important; font-weight: 600 !important;
-  }
-
-  /* All body / paragraph text — scoped to Streamlit markdown only,
-     NOT global so Plotly SVG text is untouched */
-  .stMarkdown p, .stMarkdown li, .stMarkdown ol, .stMarkdown ul,
-  .stMarkdown span, .stMarkdown td, .stMarkdown th,
-  [data-testid="stMarkdownContainer"] p,
-  [data-testid="stMarkdownContainer"] li,
-  [data-testid="stMarkdownContainer"] span,
-  [data-testid="stMarkdownContainer"] td,
-  [data-testid="stMarkdownContainer"] th {
-    color: #212529 !important;
-  }
-
-  /* Bold/strong — scoped to markdown only */
-  .stMarkdown strong, .stMarkdown b,
-  [data-testid="stMarkdownContainer"] strong,
-  [data-testid="stMarkdownContainer"] b {
-    color: #1F4E79 !important;
-  }
-
-  /* Blockquotes */
-  blockquote, .stMarkdown blockquote,
-  [data-testid="stMarkdownContainer"] blockquote {
-    border-left: 4px solid #2E75B6 !important;
-    background: #f0f7ff !important;
-    padding: 10px 16px !important;
-    border-radius: 0 8px 8px 0 !important;
-    color: #495057 !important;
-  }
-  blockquote p,
-  [data-testid="stMarkdownContainer"] blockquote p {
-    color: #495057 !important;
-  }
-
-  /* Inline code */
-  code, .stMarkdown code,
-  [data-testid="stMarkdownContainer"] code {
-    background: #e8f0fe !important;
-    color: #1F4E79 !important;
-    padding: 1px 5px !important;
-    border-radius: 4px !important;
-  }
-
-  /* Form/widget labels */
-  label, .stTextInput label, .stSelectbox label,
-  .stNumberInput label, .stTextArea label,
-  .stSlider label, .stRadio label, .stCheckbox label,
-  .stFileUploader label, [data-testid="stWidgetLabel"],
-  [data-testid="stWidgetLabel"] p {
-    color: #212529 !important; font-weight: 500 !important;
-  }
-
-  /* Expander header */
-  .streamlit-expanderHeader, [data-testid="stExpanderToggleIcon"],
-  details summary {
-    color: #1F4E79 !important; font-weight: 600 !important;
-  }
-  .streamlit-expanderContent p,
-  .streamlit-expanderContent li,
-  details p, details li { color: #212529 !important; }
-
-  /* Caption / helper text */
-  .stCaption, [data-testid="stCaption"],
-  small { color: #6c757d !important; }
-
-  /* Info / success / warning / error box text */
-  [data-testid="stAlert"] p,
-  [data-testid="stAlert"] div { color: inherit !important; }
+  /* ── Main content: force headings to brand dark blue ── */
+  [data-testid="stMainBlockContainer"] h1,
+  [data-testid="stAppViewBlockContainer"] h1,
+  .main h1 { color: #1F4E79 !important; font-weight: 700 !important; }
+  [data-testid="stMainBlockContainer"] h2,
+  [data-testid="stAppViewBlockContainer"] h2,
+  .main h2 { color: #1F4E79 !important; font-weight: 600 !important; }
+  [data-testid="stMainBlockContainer"] h3,
+  .main h3 { color: #2E75B6 !important; font-weight: 600 !important; }
+  /* All body text in main area stays dark */
+  [data-testid="stMainBlockContainer"] p,
+  [data-testid="stAppViewBlockContainer"] p,
+  .stMarkdown p, .stMarkdown li, .stMarkdown span { color: #212529 !important; }
+  blockquote p { color: #495057 !important; }
 
   .metric-card {
     background: white; border-radius: 12px; padding: 20px 24px;
@@ -593,17 +522,12 @@ df_mse = st.session_state["df_mse"]
 # ══════════════════════ PAGE: DATA SOURCES ════════════════════════
 if page == "🔌 Data Sources":
 
-    st.markdown('<div class="section-header">🔌 Data Sources — How Real Data Enters MapMSE</div>',
-                unsafe_allow_html=True)
+    st.markdown("## 🔌 Data Sources — How Real Data Enters MapMSE")
     st.markdown("""
-    <div class="info-card" style="margin-bottom:12px;">
-      <span style="color:#1F4E79;font-size:0.95rem;">
-      📌 <strong>This is your control panel for data.</strong> Think of it like choosing the
-      fuel for the engine. You can switch between Demo data, your own Excel file,
-      or a live government API — and the entire app updates instantly across all pages.
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
+    > This page is your **control panel for data**. Think of it like choosing the
+    > fuel for the engine. You can switch between Demo data, your own Excel file,
+    > or a live government API — and the entire app updates instantly.
+    """)
 
     # ── VISUAL PIPELINE ─────────────────────────────────────────────
     st.markdown('<div class="section-header">🗺️ How Data Flows Through the System</div>',
@@ -728,7 +652,7 @@ if page == "🔌 Data Sources":
                     st.success(f"✅ Loaded **{len(df_new):,} MSEs** from `{uploaded.name}`")
 
                     # Preview
-                    st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📋 Preview (first 5 rows):</p>", unsafe_allow_html=True)
+                    st.markdown("**Preview (first 5 rows):**")
                     preview_cols = ["Enterprise Name","State","Sector",
                                     "Annual Turnover (L)","No. of Employees",
                                     "Status","Categorisation Confidence"]
@@ -807,7 +731,7 @@ if page == "🔌 Data Sources":
                 st.info("ℹ️ No API key — running in simulation mode")
 
         with col2:
-            st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>🔍 Look up a single enterprise:</p>", unsafe_allow_html=True)
+            st.markdown("**Look up a single enterprise:**")
             udyam_input = st.text_input(
                 "Udyam Registration Number",
                 placeholder="e.g. UDYAM-KL-08-0023456",
@@ -826,7 +750,7 @@ if page == "🔌 Data Sources":
                     st.json(data)
 
                     new_row = parse_udyam_response_to_row(data)
-                    st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>✅ Converted to app format:</p>", unsafe_allow_html=True)
+                    st.markdown("**Converted to app format:**")
                     st.dataframe(pd.DataFrame([new_row]), use_container_width=True)
 
                     if st.button("➕ Add this MSE to Registry", use_container_width=True):
@@ -984,7 +908,7 @@ if page == "🔌 Data Sources":
                 st.rerun()
 
         # Show what synthetic data looks like vs what real data looks like
-        st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📊 Side-by-side: Demo Data vs Real Data</p>", unsafe_allow_html=True)
+        st.markdown("**Side-by-side: Demo Data vs Real Data**")
         comp = pd.DataFrame([
             ["Enterprise Name",   "Shree Industries Pvt Ltd (random words)", "Vijaya Cotton Mills Pvt Ltd (actual company)"],
             ["Turnover",          "₹127.4 Lakhs (random number)",            "₹127.4 Lakhs (from GST returns / Udyam)"],
@@ -1045,7 +969,7 @@ if page == "🔌 Data Sources":
                                    marker_colors=["#1F4E79","#2E75B6","#28a745","#ffc107"]))
             fig.update_layout(height=220, margin=dict(l=0,r=0,t=10,b=0),
                               showlegend=False, paper_bgcolor="white",
-                              font=dict(family="Inter", size=10, color="#212529"))
+                              font=dict(family="Inter", size=10))
             st.plotly_chart(fig, use_container_width=True)
         with col2:
             st.dataframe(src_pie, use_container_width=True, hide_index=True)
@@ -1085,15 +1009,8 @@ elif page == "📊 Dashboard":
             fig = px.bar(sc, x="count", y="State", orientation="h",
                          color="count", color_continuous_scale=["#cce4ff","#1F4E79"])
             fig.update_layout(height=340, margin=dict(l=0,r=0,t=10,b=0),
-                              coloraxis_showscale=False,
-                              paper_bgcolor="white", plot_bgcolor="white",
-                              font=dict(family="Inter", size=11, color="#212529"),
-                              xaxis=dict(tickfont=dict(color="#495057",size=10),
-                                         title_font=dict(color="#495057"),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"),
-                              yaxis=dict(tickfont=dict(color="#212529",size=10),
-                                         title_font=dict(color="#495057"),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"))
+                              coloraxis_showscale=False, paper_bgcolor="white",
+                              plot_bgcolor="white", font=dict(family="Inter",size=11))
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1108,11 +1025,8 @@ elif page == "📊 Dashboard":
             fig.add_annotation(text=f"<b>{len(df_mse):,}</b><br>Total",
                                x=0.5,y=0.5,font=dict(size=13,color="#1F4E79"),showarrow=False)
             fig.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=0),
-                              showlegend=True,
-                              legend=dict(font=dict(size=9, color="#212529"),
-                                          bgcolor="rgba(255,255,255,0.9)"),
-                              paper_bgcolor="white",
-                              font=dict(family="Inter", color="#212529"))
+                              showlegend=True, legend=dict(font=dict(size=9)),
+                              paper_bgcolor="white", font=dict(family="Inter"))
             st.plotly_chart(fig, use_container_width=True)
 
     col1,col2 = st.columns(2)
@@ -1123,16 +1037,9 @@ elif page == "📊 Dashboard":
             fig = px.bar(sd, x="Sector", y="count",
                          color="count", color_continuous_scale=["#bee3f8","#1F4E79"])
             fig.update_layout(height=300, margin=dict(l=0,r=10,t=10,b=80),
-                              coloraxis_showscale=False,
-                              paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                              font=dict(family="Inter", size=10, color="#212529"),
-                              xaxis=dict(tickangle=-35,
-                                         tickfont=dict(size=9, color="#212529"),
-                                         title_font=dict(color="#495057"),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"),
-                              yaxis=dict(tickfont=dict(color="#495057", size=9),
-                                         title_font=dict(color="#495057"),
-                                         gridcolor="#e9ecef", linecolor="#dee2e6"))
+                              coloraxis_showscale=False, paper_bgcolor="white",
+                              plot_bgcolor="#f8f9fa", font=dict(family="Inter",size=10),
+                              xaxis=dict(tickangle=-35,tickfont=dict(size=9)))
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1152,17 +1059,9 @@ elif page == "📊 Dashboard":
                 fig.update_layout(height=300, barmode="overlay",
                                   margin=dict(l=0,r=0,t=10,b=0),
                                   paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                                  font=dict(family="Inter", size=11, color="#212529"),
-                                  legend=dict(font=dict(size=10, color="#212529"),
-                                              bgcolor="rgba(255,255,255,0.9)"),
-                                  xaxis=dict(title="Days",
-                                             title_font=dict(color="#495057"),
-                                             tickfont=dict(color="#495057"),
-                                             gridcolor="#e9ecef", linecolor="#dee2e6"),
-                                  yaxis=dict(title="Count",
-                                             title_font=dict(color="#495057"),
-                                             tickfont=dict(color="#495057"),
-                                             gridcolor="#e9ecef", linecolor="#dee2e6"))
+                                  font=dict(family="Inter",size=11),
+                                  legend=dict(font=dict(size=10)),
+                                  xaxis_title="Days", yaxis_title="Count")
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No onboarding time data available yet.")
@@ -1175,10 +1074,7 @@ elif page == "📊 Dashboard":
                      color_discrete_sequence=["#1F4E79","#2E75B6","#28a745","#ffc107"])
         fig.update_layout(height=250, margin=dict(l=0,r=0,t=10,b=0),
                           showlegend=False, paper_bgcolor="white",
-                          plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter", size=11, color="#212529"),
-                          xaxis=dict(tickfont=dict(color="#212529"), gridcolor="#e9ecef"),
-                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef"))
+                          plot_bgcolor="#f8f9fa", font=dict(family="Inter",size=11))
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -1355,13 +1251,11 @@ elif page == "🔍 Product Categoriser":
                           labels=["<80% Review","80–90%","90–95%","95–100%"]).value_counts()
             fig = go.Figure(go.Pie(labels=cats.index, values=cats.values, hole=0.4,
                                    marker_colors=["#dc3545","#ffc107","#17a2b8","#28a745"]))
-            fig.update_layout(height=240, margin=dict(l=0,r=0,t=10,b=0),
-                              paper_bgcolor="white",
-                              font=dict(family="Inter", color="#212529"),
-                              legend=dict(font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"))
+            fig.update_layout(height=240,margin=dict(l=0,r=0,t=10,b=0),
+                              paper_bgcolor="white",font=dict(family="Inter"))
             st.plotly_chart(fig, use_container_width=True)
         with col2:
-            st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:6px;'>📊 Accuracy by Sector</p>", unsafe_allow_html=True)
+            st.markdown("**Accuracy by Sector**")
             sa = df_mse.groupby("Sector")["Categorisation Confidence"].mean().sort_values(ascending=False)
             for sector,acc in sa.items():
                 bw = int(acc*100)
@@ -1471,7 +1365,8 @@ elif page == "📋 MSE Registry":
                 mask |= df_f[col].astype(str).str.contains(search, case=False, na=False)
         df_f = df_f[mask]
 
-    st.markdown(f"<p style='color:#495057;font-size:0.9rem;'><strong style='color:#1F4E79;'>Showing {len(df_f):,} of {len(df_mse):,} MSEs</strong> — Source: <code style='background:#e8f0fe;color:#1F4E79;padding:1px 5px;border-radius:4px;'>{st.session_state.get('source_label','')}</code></p>", unsafe_allow_html=True)
+    st.markdown(f"**Showing {len(df_f):,} of {len(df_mse):,} MSEs** — "
+                f"Source: `{st.session_state.get('source_label','')}`")
 
     display_cols = [c for c in ["MSE ID","Enterprise Name","State","Sector","Status",
                                  "Assigned SNP","Match Score","Onboarding Time (days)",
@@ -1523,14 +1418,10 @@ elif page == "📈 Analytics":
                                  line=dict(color="#1B5E20",width=2.5),fill="tozeroy",
                                  fillcolor="rgba(27,94,32,0.08)"))
         fig.update_layout(title="Cumulative Registrations vs Onboardings",
-                          title_font=dict(color="#1F4E79", size=13),
                           height=300, margin=dict(l=0,r=0,t=40,b=0),
                           paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter", size=11, color="#212529"),
-                          legend=dict(orientation="h", y=1.15,
-                                      font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"),
-                          xaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"),
-                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"))
+                          font=dict(family="Inter",size=11),
+                          legend=dict(orientation="h",y=1.15))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1542,12 +1433,9 @@ elif page == "📈 Analytics":
         fig.add_hline(y=90, line_dash="dash", line_color="#dc3545",
                       annotation_text="Target: 90%")
         fig.update_layout(title="Categorisation Accuracy Trend (%)",
-                          title_font=dict(color="#1F4E79", size=13),
                           height=300, margin=dict(l=0,r=0,t=40,b=0),
                           paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                          font=dict(family="Inter", size=11, color="#212529"),
-                          xaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"),
-                          yaxis=dict(tickfont=dict(color="#495057"), gridcolor="#e9ecef", linecolor="#dee2e6"))
+                          font=dict(family="Inter",size=11))
         st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-header">🏢 SNP Performance Leaderboard</div>',
@@ -1572,12 +1460,6 @@ elif page == "📈 Analytics":
                          marker_color="#1F4E79", opacity=0.9))
     fig.update_layout(barmode="group", height=320, margin=dict(l=0,r=0,t=10,b=0),
                       paper_bgcolor="white", plot_bgcolor="#f8f9fa",
-                      font=dict(family="Inter", size=11, color="#212529"),
-                      legend=dict(orientation="h", y=1.05,
-                                  font=dict(color="#212529"), bgcolor="rgba(255,255,255,0.9)"),
-                      xaxis=dict(tickfont=dict(color="#212529", size=10),
-                                 tickangle=-20,
-                                 gridcolor="#e9ecef", linecolor="#dee2e6"),
-                      yaxis=dict(tickfont=dict(color="#495057"),
-                                 gridcolor="#e9ecef", linecolor="#dee2e6"))
+                      font=dict(family="Inter",size=11),
+                      legend=dict(orientation="h",y=1.05))
     st.plotly_chart(fig, use_container_width=True)
