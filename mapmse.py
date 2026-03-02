@@ -9,6 +9,7 @@ Business Model, Market Analysis, Go-to-Market, Partnerships
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import random
@@ -34,25 +35,7 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #f0f4f8; }
 
-/* ── SIDEBAR TOGGLE FIX ── */
-button[data-testid="collapsedControl"],
-[data-testid="collapsedControl"] {
-  display: flex !important; visibility: visible !important;
-  opacity: 1 !important; position: fixed !important;
-  top: 50% !important; left: 0px !important;
-  transform: translateY(-50%) !important; z-index: 99999 !important;
-  background: #1F4E79 !important; border: none !important;
-  border-radius: 0 8px 8px 0 !important;
-  width: 28px !important; height: 56px !important;
-  cursor: pointer !important; box-shadow: 3px 0 10px rgba(0,0,0,0.3) !important;
-  align-items: center !important; justify-content: center !important;
-}
-button[data-testid="collapsedControl"]:hover { background: #2E75B6 !important; width: 34px !important; }
-button[data-testid="collapsedControl"] svg { fill: #ffffff !important; color: #ffffff !important; }
-[data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapseButton"] button {
-  visibility: visible !important; opacity: 1 !important; display: flex !important;
-}
-[data-testid="stSidebarCollapseButton"] svg { fill: #ffffff !important; color: #ffffff !important; }
+/* ── SIDEBAR TOGGLE: our custom button is injected via components.html ── */
 
 /* ── SIDEBAR ── */
 section[data-testid="stSidebar"] {
@@ -186,36 +169,152 @@ code, .stMarkdown code { background: #e8f0fe !important; color: #1F4E79 !importa
 .model-badge { font-size:0.7rem; background:#dbeafe; color:#1e40af;
   padding:2px 8px; border-radius:12px; font-weight:600; }
 </style>
+""", unsafe_allow_html=True)
 
-<script>
-(function() {
-  function injectToggle() {
-    if (document.getElementById('sb-float')) return;
-    var btn = document.createElement('button');
-    btn.id = 'sb-float';
-    btn.innerHTML = '&#9776;';
-    btn.style.cssText = 'position:fixed;top:50%;left:0;transform:translateY(-50%);z-index:999999;' +
-      'background:#1F4E79;color:white;border:none;border-radius:0 10px 10px 0;' +
-      'width:26px;height:58px;cursor:pointer;font-size:15px;' +
-      'box-shadow:3px 0 12px rgba(0,0,0,0.35);transition:all 0.2s;';
-    btn.onmouseover = function(){ this.style.background='#2563EB'; this.style.width='32px'; };
-    btn.onmouseout  = function(){ this.style.background='#1F4E79'; this.style.width='26px'; };
-    btn.onclick = function() {
-      var nb = document.querySelector('[data-testid="collapsedControl"]') ||
-               document.querySelector('[data-testid="stSidebarCollapseButton"] button');
-      if (nb) { nb.click(); return; }
-      var sb = document.querySelector('section[data-testid="stSidebar"]');
-      if (sb) sb.style.display = sb.style.display==='none' ? 'flex' : 'none';
-    };
-    document.body.appendChild(btn);
+# ── SIDEBAR TOGGLE via components.html ─────────────────────────────
+# height=0 prevents the iframe from loading entirely in Streamlit.
+# Must use height=1 with the iframe itself made invisible via CSS.
+# JS runs inside the iframe but operates on window.parent (real page).
+components.html("""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    width: 1px; height: 1px;
+    overflow: hidden; background: transparent;
   }
-  document.readyState==='loading'
-    ? document.addEventListener('DOMContentLoaded', injectToggle)
-    : injectToggle();
-  new MutationObserver(injectToggle).observe(document.body, {childList:true, subtree:false});
+</style>
+</head>
+<body>
+<script>
+(function () {
+  var par   = window.parent;
+  var pdoc  = par.document;
+  var isOpen = true;
+
+  /* ─── Arrow SVG icons ─── */
+  function arrowSVG(dir) {
+    /* dir: 'left' = sidebar open (show collapse arrow)
+             'right' = sidebar closed (show expand arrow) */
+    var pts = dir === 'left' ? '15 18 9 12 15 6' : '9 18 15 12 9 6';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" '
+         + 'viewBox="0 0 24 24" fill="none" stroke="#ffffff" '
+         + 'stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">'
+         + '<polyline points="' + pts + '"/></svg>';
+  }
+
+  /* ─── Detect sidebar open/closed ─── */
+  function sidebarIsOpen() {
+    var sb = pdoc.querySelector('section[data-testid="stSidebar"]');
+    if (!sb) return false;
+    var rect = sb.getBoundingClientRect();
+    /* When collapsed Streamlit pushes it off-screen (left < -50) */
+    return rect.width > 50 && rect.left > -50;
+  }
+
+  /* ─── Update button icon ─── */
+  function syncIcon() {
+    var b = pdoc.getElementById('mm-sidebar-btn');
+    if (!b) return;
+    isOpen = sidebarIsOpen();
+    b.innerHTML = arrowSVG(isOpen ? 'left' : 'right');
+    b.title = isOpen ? 'Collapse sidebar' : 'Expand sidebar';
+  }
+
+  /* ─── Click handler: trigger Streamlit's own toggle ─── */
+  function handleClick() {
+    /* Streamlit's native buttons across all versions */
+    var selectors = [
+      '[data-testid="collapsedControl"]',
+      '[data-testid="stSidebarCollapseButton"] button',
+      'button[aria-label="Close sidebar"]',
+      'button[aria-label="Open sidebar"]',
+      'section[data-testid="stSidebar"] button[kind="header"]'
+    ];
+    for (var i = 0; i < selectors.length; i++) {
+      var nb = pdoc.querySelector(selectors[i]);
+      if (nb) { nb.click(); return; }
+    }
+    /* Pure CSS fallback if Streamlit buttons not found */
+    var sb = pdoc.querySelector('section[data-testid="stSidebar"]');
+    if (sb) {
+      var open = sidebarIsOpen();
+      sb.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1)';
+      sb.style.transform  = open ? 'translateX(-105%)' : 'translateX(0)';
+    }
+  }
+
+  /* ─── Create the persistent floating button ─── */
+  function createButton() {
+    if (pdoc.getElementById('mm-sidebar-btn')) return;
+
+    var btn = pdoc.createElement('button');
+    btn.id = 'mm-sidebar-btn';
+    btn.style.cssText = [
+      'position:fixed',
+      'top:50%',
+      'left:0',
+      'transform:translateY(-50%)',
+      'z-index:2147483647',
+      'width:28px',
+      'height:68px',
+      'background:linear-gradient(160deg,#1F4E79 0%,#2563EB 100%)',
+      'border:none',
+      'border-radius:0 12px 12px 0',
+      'cursor:pointer',
+      'box-shadow:3px 0 18px rgba(0,0,0,0.50)',
+      'display:flex',
+      'align-items:center',
+      'justify-content:center',
+      'padding:0',
+      'outline:none',
+      'transition:width 0.16s ease, box-shadow 0.16s ease'
+    ].join(';') + ';';
+
+    btn.addEventListener('mouseenter', function(){
+      this.style.width      = '38px';
+      this.style.boxShadow  = '5px 0 24px rgba(0,0,0,0.65)';
+    });
+    btn.addEventListener('mouseleave', function(){
+      this.style.width      = '28px';
+      this.style.boxShadow  = '3px 0 18px rgba(0,0,0,0.50)';
+    });
+    btn.addEventListener('click', function(){
+      handleClick();
+      /* Delay icon sync so Streamlit animation has time to run */
+      setTimeout(syncIcon, 350);
+    });
+
+    syncIcon();          /* set correct arrow before appending */
+    btn.innerHTML = arrowSVG(isOpen ? 'left' : 'right');
+    pdoc.body.appendChild(btn);
+  }
+
+  /* ─── Keep button alive through all Streamlit re-renders ─── */
+  function keepAlive() {
+    createButton();
+    syncIcon();
+  }
+
+  /* Run immediately */
+  createButton();
+
+  /* Watch parent DOM for Streamlit re-renders (navigation, widget changes) */
+  new MutationObserver(keepAlive).observe(pdoc.body, {
+    childList : true,
+    subtree   : true
+  });
+
+  /* Heartbeat poll — final safety net, every 600 ms */
+  setInterval(keepAlive, 600);
+
 })();
 </script>
-""", unsafe_allow_html=True)
+</body>
+</html>
+""", height=1)
 
 # ─────────────────── CONSTANTS ─────────────────────────────────────
 INDIAN_STATES = ["Kerala","Tamil Nadu","Karnataka","Maharashtra","Gujarat",
