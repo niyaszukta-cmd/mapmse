@@ -3,7 +3,7 @@ MapMSE: AI-Powered MSE-to-SNP Intelligent Agent Mapping Platform
 IndiaAI Innovation Challenge 2026 — Problem Statement 2 (Ministry of MSME)
 Developed by: NYZTrade AI Solutions
 
-VERSION 2.0 — Real Data Ready
+VERSION 2.1 — Fixed Sidebar Toggle
 ─────────────────────────────────────────────────────────────────────────────
 HOW DATA FLOWS INTO THIS SYSTEM (Plain English):
 
@@ -42,7 +42,79 @@ st.markdown("""
   html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
   .stApp { background: #f0f4f8; }
 
-  /* ══ SIDEBAR — white text, never bleeds into main ══ */
+  /* ══ SIDEBAR TOGGLE FIX — always visible, never disappears ══
+     The toggle button sits at a fixed position on the left edge.
+     When sidebar is collapsed the button still floats visibly.   */
+
+  /* The collapse/expand button Streamlit renders */
+  button[data-testid="collapsedControl"],
+  [data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 0px !important;
+    transform: translateY(-50%) !important;
+    z-index: 99999 !important;
+    background: #1F4E79 !important;
+    border: none !important;
+    border-radius: 0 8px 8px 0 !important;
+    width: 28px !important;
+    height: 56px !important;
+    cursor: pointer !important;
+    box-shadow: 3px 0 10px rgba(0,0,0,0.3) !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  button[data-testid="collapsedControl"]:hover,
+  [data-testid="collapsedControl"]:hover {
+    background: #2E75B6 !important;
+    width: 34px !important;
+  }
+
+  /* Arrow icon inside toggle */
+  button[data-testid="collapsedControl"] svg,
+  [data-testid="collapsedControl"] svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Sidebar expand button (when sidebar is open) */
+  button[data-testid="baseButton-headerNoPadding"],
+  [data-testid="baseButton-headerNoPadding"] {
+    color: #ffffff !important;
+  }
+
+  /* Keep the sidebar close/chevron button visible when sidebar is open */
+  section[data-testid="stSidebar"] button[kind="header"],
+  section[data-testid="stSidebar"] [data-testid="stSidebarCollapsedControl"],
+  section[data-testid="stSidebar"] > div:first-child button {
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    background: rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+  }
+
+  /* Force the collapse arrow button always rendered */
+  [data-testid="stSidebarCollapseButton"],
+  [data-testid="stSidebarCollapseButton"] button {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: flex !important;
+  }
+
+  [data-testid="stSidebarCollapseButton"] svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+  }
+
+  /* ══ SIDEBAR — white text, blue gradient background ══ */
   section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1F4E79 0%, #2E75B6 100%) !important;
   }
@@ -56,11 +128,26 @@ st.markdown("""
   section[data-testid="stSidebar"] strong,
   section[data-testid="stSidebar"] em { color: #ffffff !important; }
 
-  /* ══ MAIN CONTENT — nuclear text color enforcement ══
-     Covers every Streamlit text path so theme cannot
-     override and make text invisible on light background */
+  /* Radio buttons in sidebar */
+  section[data-testid="stSidebar"] .stRadio label span {
+    color: #ffffff !important;
+  }
+  section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
+    background: rgba(255,255,255,0.08) !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    margin-bottom: 3px !important;
+    transition: background 0.2s !important;
+  }
+  section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:hover {
+    background: rgba(255,255,255,0.18) !important;
+  }
+  section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:has(input:checked) {
+    background: rgba(255,255,255,0.25) !important;
+    font-weight: 600 !important;
+  }
 
-  /* Headings */
+  /* ══ MAIN CONTENT — text color enforcement ══ */
   h1, h2, .stMarkdown h1, .stMarkdown h2,
   [data-testid="stMarkdownContainer"] h1,
   [data-testid="stMarkdownContainer"] h2 {
@@ -72,8 +159,6 @@ st.markdown("""
     color: #2E75B6 !important; font-weight: 600 !important;
   }
 
-  /* All body / paragraph text — scoped to Streamlit markdown only,
-     NOT global so Plotly SVG text is untouched */
   .stMarkdown p, .stMarkdown li, .stMarkdown ol, .stMarkdown ul,
   .stMarkdown span, .stMarkdown td, .stMarkdown th,
   [data-testid="stMarkdownContainer"] p,
@@ -84,14 +169,12 @@ st.markdown("""
     color: #212529 !important;
   }
 
-  /* Bold/strong — scoped to markdown only */
   .stMarkdown strong, .stMarkdown b,
   [data-testid="stMarkdownContainer"] strong,
   [data-testid="stMarkdownContainer"] b {
     color: #1F4E79 !important;
   }
 
-  /* Blockquotes */
   blockquote, .stMarkdown blockquote,
   [data-testid="stMarkdownContainer"] blockquote {
     border-left: 4px solid #2E75B6 !important;
@@ -105,7 +188,6 @@ st.markdown("""
     color: #495057 !important;
   }
 
-  /* Inline code */
   code, .stMarkdown code,
   [data-testid="stMarkdownContainer"] code {
     background: #e8f0fe !important;
@@ -114,7 +196,6 @@ st.markdown("""
     border-radius: 4px !important;
   }
 
-  /* Form/widget labels */
   label, .stTextInput label, .stSelectbox label,
   .stNumberInput label, .stTextArea label,
   .stSlider label, .stRadio label, .stCheckbox label,
@@ -123,7 +204,6 @@ st.markdown("""
     color: #212529 !important; font-weight: 500 !important;
   }
 
-  /* Expander header */
   .streamlit-expanderHeader, [data-testid="stExpanderToggleIcon"],
   details summary {
     color: #1F4E79 !important; font-weight: 600 !important;
@@ -132,14 +212,13 @@ st.markdown("""
   .streamlit-expanderContent li,
   details p, details li { color: #212529 !important; }
 
-  /* Caption / helper text */
   .stCaption, [data-testid="stCaption"],
   small { color: #6c757d !important; }
 
-  /* Info / success / warning / error box text */
   [data-testid="stAlert"] p,
   [data-testid="stAlert"] div { color: inherit !important; }
 
+  /* ══ COMPONENT STYLES ══ */
   .metric-card {
     background: white; border-radius: 12px; padding: 20px 24px;
     border-left: 4px solid #2E75B6;
@@ -191,9 +270,6 @@ st.markdown("""
     border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 6px 0;
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   }
-  .pipeline-arrow {
-    text-align: center; font-size: 1.5rem; margin: 2px 0; color: #2E75B6;
-  }
   .match-score-high { color:#1B5E20; font-weight:700; font-size:1.4rem; }
   .match-score-med  { color:#E65100; font-weight:700; font-size:1.4rem; }
   .progress-bar-outer { background:#e9ecef; border-radius:8px; height:10px; margin:4px 0; overflow:hidden; }
@@ -210,7 +286,84 @@ st.markdown("""
     color: #1F4E79 !important; font-weight: 500 !important;
   }
   .stTabs [aria-selected="true"] { background: #1F4E79 !important; color: white !important; }
+
+  /* ══ FLOATING TOGGLE BUTTON — custom JS-injected fallback ══
+     If Streamlit's native toggle is still invisible, this injects
+     a persistent floating tab on the left edge.                  */
+  #sidebar-float-toggle {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 999999;
+    background: #1F4E79;
+    color: white;
+    border: none;
+    border-radius: 0 10px 10px 0;
+    width: 24px;
+    height: 60px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 3px 0 12px rgba(0,0,0,0.35);
+    writing-mode: vertical-rl;
+    letter-spacing: 1px;
+    font-weight: 700;
+    transition: width 0.2s, background 0.2s;
+  }
+  #sidebar-float-toggle:hover {
+    background: #2E75B6;
+    width: 32px;
+  }
 </style>
+
+<script>
+// Inject a guaranteed-visible floating toggle that controls the sidebar
+(function() {
+  function injectToggle() {
+    if (document.getElementById('sidebar-float-toggle')) return;
+
+    var btn = document.createElement('button');
+    btn.id = 'sidebar-float-toggle';
+    btn.innerHTML = '&#9776;';
+    btn.title = 'Toggle Sidebar';
+
+    btn.addEventListener('click', function() {
+      // Try clicking Streamlit's native collapse button first
+      var nativeBtn = document.querySelector('[data-testid="collapsedControl"]')
+                   || document.querySelector('[data-testid="stSidebarCollapseButton"] button')
+                   || document.querySelector('section[data-testid="stSidebar"] button');
+      if (nativeBtn) {
+        nativeBtn.click();
+      } else {
+        // Fallback: toggle sidebar visibility directly
+        var sidebar = document.querySelector('section[data-testid="stSidebar"]');
+        if (sidebar) {
+          var current = sidebar.style.display;
+          sidebar.style.display = (current === 'none') ? 'flex' : 'none';
+        }
+      }
+    });
+
+    document.body.appendChild(btn);
+  }
+
+  // Run after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectToggle);
+  } else {
+    injectToggle();
+  }
+
+  // Re-inject after Streamlit re-renders (it replaces DOM)
+  var observer = new MutationObserver(function(mutations) {
+    injectToggle();
+  });
+  observer.observe(document.body, { childList: true, subtree: false });
+})();
+</script>
 """, unsafe_allow_html=True)
 
 
@@ -288,9 +441,6 @@ def generate_snp_data():
 def process_uploaded_file(uploaded_file):
     """
     REAL DATA SOURCE 1: Excel / CSV Upload
-    ────────────────────────────────────────
-    Reads the user's file, validates columns, adds computed fields,
-    and returns a DataFrame in the same format as the synthetic data.
     """
     try:
         if uploaded_file.name.endswith(".csv"):
@@ -300,35 +450,25 @@ def process_uploaded_file(uploaded_file):
 
         df.columns = [c.strip() for c in df.columns]
 
-        # Check required columns
         missing = [c for c in REQUIRED_COLS if c not in df.columns]
         if missing:
             return None, f"Missing required columns: {missing}"
 
-        # Add computed / default columns if not present
         if "MSE ID" not in df.columns:
             df.insert(0, "MSE ID", [f"MSE{2025000+i}" for i in range(len(df))])
-
         if "Registration Date" not in df.columns:
             df["Registration Date"] = datetime.now().strftime("%Y-%m-%d")
-
         if "Status" not in df.columns:
             df["Status"] = "Pending Verification"
-
         if "Assigned SNP" not in df.columns:
             df["Assigned SNP"] = "—"
-
         if "Match Score" not in df.columns:
             df["Match Score"] = 0.0
-
         if "Language" not in df.columns:
             df["Language"] = "Hindi"
-
         if "Onboarding Time (days)" not in df.columns:
             df["Onboarding Time (days)"] = None
-
         if "Categorisation Confidence" not in df.columns:
-            # Run lightweight keyword-based confidence scoring
             def quick_confidence(row):
                 sector = str(row.get("Sector","")).lower()
                 known = ["textile","food","metal","handicraft","electronics",
@@ -346,17 +486,7 @@ def process_uploaded_file(uploaded_file):
 def fetch_udyam_api(udyam_number: str, api_key: str = ""):
     """
     REAL DATA SOURCE 2: Udyam Registration Portal API
-    ──────────────────────────────────────────────────
-    In production, this calls:
-      GET https://udyamregistration.gov.in/api/enterprise/{udyam_number}
-      Headers: { "x-api-key": api_key }
-
-    The response contains:
-      enterprise_name, nic_code, state, district, investment,
-      turnover, activity_type, date_of_incorporation, etc.
-
-    Right now (demo mode) it returns a realistic mock response
-    when no real API key is provided.
+    (Demo simulation when no API key provided)
     """
     # ── REAL CALL (uncomment when you have an API key) ──────────────
     # import requests
@@ -369,11 +499,10 @@ def fetch_udyam_api(udyam_number: str, api_key: str = ""):
     #     return None, f"API Error {response.status_code}: {response.text}"
     # ────────────────────────────────────────────────────────────────
 
-    # ── DEMO SIMULATION (remove when real API is active) ─────────────
     if not udyam_number.startswith("UDYAM-"):
         return None, "Invalid format. Use: UDYAM-XX-XX-XXXXXXX"
 
-    time.sleep(1.2)  # simulate network delay
+    time.sleep(1.2)
     parts = udyam_number.upper().split("-")
     state_code = parts[1] if len(parts) > 1 else "KL"
     state_map = {"KL":"Kerala","TN":"Tamil Nadu","KA":"Karnataka",
@@ -400,11 +529,9 @@ def fetch_udyam_api(udyam_number: str, api_key: str = ""):
         "date_of_udyam_registration": "2020-08-15",
         "data_source": "Udyam Portal API (Simulated)"
     }, None
-    # ────────────────────────────────────────────────────────────────
 
 
 def parse_udyam_response_to_row(api_data: dict) -> dict:
-    """Converts raw Udyam API JSON into the app's standard row format."""
     turnover_lakhs = round(api_data.get("turnover", 0) / 100000, 1)
     return {
         "MSE ID": f"MSE{random.randint(2025000,2029999)}",
@@ -426,7 +553,6 @@ def parse_udyam_response_to_row(api_data: dict) -> dict:
 
 
 def nic_to_sector(nic_code: str) -> str:
-    """Map NIC code prefix to ONDC sector. Real version would use full NIC table."""
     mapping = {
         "10":"Food Processing","11":"Food Processing","12":"Food Processing",
         "13":"Textiles & Apparel","14":"Textiles & Apparel","15":"Leather Goods",
@@ -440,15 +566,7 @@ def nic_to_sector(nic_code: str) -> str:
 
 
 def validate_and_enrich_df(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Post-processing pipeline that runs on ANY data source.
-    Adds AI-scored fields if they're missing or zero.
-    In production this calls real ML models.
-    """
     df = df.copy()
-
-    # Re-score categorisation confidence using keyword heuristics
-    # (In production: call the real NLP categorisation API here)
     needs_scoring = df["Categorisation Confidence"] == 0.0
     if needs_scoring.any():
         def score(row):
@@ -458,13 +576,10 @@ def validate_and_enrich_df(df: pd.DataFrame) -> pd.DataFrame:
             base = 0.88 if any(k in sector for k in known) else 0.72
             return round(base + np.random.uniform(-0.05, 0.08), 2)
         df.loc[needs_scoring, "Categorisation Confidence"] = df[needs_scoring].apply(score, axis=1)
-
     return df
 
 
-# ─────────────────────── HELPER: CREATE SAMPLE TEMPLATE ───────────
 def make_sample_excel() -> bytes:
-    """Returns a ready-to-download Excel template with correct column headers."""
     sample = pd.DataFrame([
         {
             "Enterprise Name": "Shree Ram Textiles",
@@ -532,7 +647,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Live data status indicator
     src = st.session_state.get("data_source","demo")
     if src == "demo":
         st.markdown('<span class="badge-demo">🎲 DEMO DATA</span>', unsafe_allow_html=True)
@@ -554,7 +668,7 @@ with st.sidebar:
     with c2:
         st.markdown("🟢 NLP Active"); st.markdown("🟢 Matcher OK")
     st.markdown("---")
-    st.caption("v2.0.0 | NYZTrade AI Solutions")
+    st.caption("v2.1.0 | NYZTrade AI Solutions")
     st.caption("Feb 21, 2026")
 
 
@@ -586,7 +700,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Shorthand
 df_mse = st.session_state["df_mse"]
 
 
@@ -605,7 +718,6 @@ if page == "🔌 Data Sources":
     </div>
     """, unsafe_allow_html=True)
 
-    # ── VISUAL PIPELINE ─────────────────────────────────────────────
     st.markdown('<div class="section-header">🗺️ How Data Flows Through the System</div>',
                 unsafe_allow_html=True)
 
@@ -657,7 +769,6 @@ if page == "🔌 Data Sources":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── FOUR SOURCE TABS ─────────────────────────────────────────────
     tab1, tab2, tab3, tab4 = st.tabs([
         "📂 Source 1: Upload File",
         "🌐 Source 2: Udyam API",
@@ -665,7 +776,6 @@ if page == "🔌 Data Sources":
         "🎲 Source 4: Demo Data"
     ])
 
-    # ── TAB 1: FILE UPLOAD ───────────────────────────────────────────
     with tab1:
         col1, col2 = st.columns([1.2, 1])
         with col1:
@@ -692,7 +802,6 @@ if page == "🔌 Data Sources":
             </div>
             """, unsafe_allow_html=True)
 
-            # Download template button
             template_bytes = make_sample_excel()
             st.download_button(
                 "📥 Download Excel Template (fill & re-upload)",
@@ -727,7 +836,6 @@ if page == "🔌 Data Sources":
                     df_new = validate_and_enrich_df(df_new)
                     st.success(f"✅ Loaded **{len(df_new):,} MSEs** from `{uploaded.name}`")
 
-                    # Preview
                     st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📋 Preview (first 5 rows):</p>", unsafe_allow_html=True)
                     preview_cols = ["Enterprise Name","State","Sector",
                                     "Annual Turnover (L)","No. of Employees",
@@ -749,7 +857,6 @@ if page == "🔌 Data Sources":
                         if st.button("❌ Cancel", use_container_width=True):
                             st.info("Cancelled. Keeping current data.")
 
-        # What the columns mean
         with st.expander("📖 What does each column mean?"):
             col_desc = pd.DataFrame([
                 ["Enterprise Name",       "Yes", "Full legal name of the enterprise"],
@@ -767,7 +874,6 @@ if page == "🔌 Data Sources":
             ], columns=["Column","Required?","What it means"])
             st.dataframe(col_desc, use_container_width=True, hide_index=True)
 
-    # ── TAB 2: UDYAM API ─────────────────────────────────────────────
     with tab2:
         col1, col2 = st.columns([1.2, 1])
         with col1:
@@ -779,9 +885,8 @@ if page == "🔌 Data Sources":
               <div style="font-size:0.85rem;color:#495057;line-height:1.7;">
                 <strong>What this is:</strong> Every MSME registered in India gets a
                 Udyam Registration Number (like <code>UDYAM-KL-08-0023456</code>).
-                The Government's Udyam Portal has an API (a "data tap") that lets
-                authorised systems fetch enterprise details automatically — no
-                manual entry needed.<br><br>
+                The Government's Udyam Portal has an API that lets
+                authorised systems fetch enterprise details automatically.<br><br>
                 <strong>What happens:</strong><br>
                 1️⃣ You type the Udyam number<br>
                 2️⃣ System calls the government API<br>
@@ -794,7 +899,6 @@ if page == "🔌 Data Sources":
             </div>
             """, unsafe_allow_html=True)
 
-            # API key input (for production)
             api_key = st.text_input(
                 "🔑 Udyam API Key (leave blank for demo mode)",
                 type="password",
@@ -842,7 +946,6 @@ if page == "🔌 Data Sources":
                         st.success(f"✅ Added! Registry now has {len(new_df):,} MSEs.")
                         st.rerun()
 
-        # Bulk API info
         with st.expander("🔄 How to do bulk API lookups (production setup)"):
             st.markdown("""
             In production, instead of one-by-one lookups, you'd do this:
@@ -853,7 +956,7 @@ if page == "🔌 Data Sources":
             API_KEY  = "your-real-meitY-api-key"
             BASE_URL = "https://udyamregistration.gov.in/api/enterprise"
 
-            udyam_numbers = ["UDYAM-KL-08-001", "UDYAM-TN-07-002", ...]  # your list
+            udyam_numbers = ["UDYAM-KL-08-001", "UDYAM-TN-07-002", ...]
 
             results = []
             for num in udyam_numbers:
@@ -862,14 +965,10 @@ if page == "🔌 Data Sources":
                 if r.status_code == 200:
                     results.append(r.json())
 
-            df = pd.DataFrame(results)  # → ready to use in the app
+            df = pd.DataFrame(results)  # ready to use in the app
             ```
-
-            The above code runs once and pulls all enterprise details automatically.
-            No spreadsheet needed — the government database IS your spreadsheet.
             """)
 
-    # ── TAB 3: MANUAL ENTRY ──────────────────────────────────────────
     with tab3:
         st.markdown("""
         <div class="source-card">
@@ -902,7 +1001,7 @@ if page == "🔌 Data Sources":
                 m_email  = st.text_input("Email", placeholder="owner@enterprise.com")
 
             m_products = st.text_area("Product Description *",
-                placeholder="Describe what the enterprise makes/sells in detail. This helps the AI categorise and match correctly.",
+                placeholder="Describe what the enterprise makes/sells in detail.",
                 height=80)
 
             submitted = st.form_submit_button("✅ Register & Add to Registry",
@@ -911,7 +1010,6 @@ if page == "🔌 Data Sources":
                 if not m_name or not m_products:
                     st.error("Enterprise Name and Product Description are required.")
                 else:
-                    # Build row in standard format
                     keyword_score = 0.88 if any(
                         k in m_sector.lower()
                         for k in ["textile","food","metal","leather","wood","pharma"]
@@ -924,10 +1022,8 @@ if page == "🔌 Data Sources":
                         "No. of Employees": m_emp,
                         "Registration Date": datetime.now().strftime("%Y-%m-%d"),
                         "Status": "Pending Verification",
-                        "Assigned SNP": "—",
-                        "Match Score": 0.0,
-                        "Language": m_lang,
-                        "Onboarding Time (days)": None,
+                        "Assigned SNP": "—", "Match Score": 0.0,
+                        "Language": m_lang, "Onboarding Time (days)": None,
                         "Categorisation Confidence": round(keyword_score + np.random.uniform(-0.04,0.08),2),
                         "Data Source": "✏️ Manual Entry"
                     }
@@ -942,7 +1038,6 @@ if page == "🔌 Data Sources":
                     st.success(f"✅ **{m_name}** added to registry! Total: {len(new_df):,} MSEs.")
                     st.rerun()
 
-    # ── TAB 4: DEMO DATA ────────────────────────────────────────────
     with tab4:
         st.markdown("""
         <div class="source-card">
@@ -953,9 +1048,6 @@ if page == "🔌 Data Sources":
             <strong>What it is:</strong> 500 completely fake, computer-generated MSE records.
             No real enterprise information. Created purely to demonstrate the app's
             features before real data is connected.<br><br>
-            <strong>How it's generated:</strong> Python's <code>random</code> library
-            picks from pre-defined lists (states, sectors, company name fragments)
-            and assembles them. Like a mad-libs for business data.<br><br>
             <strong>Is it realistic?</strong> Intentionally yes — the distributions
             (turnover, employee count, sector mix) are calibrated to roughly match
             India's MSME landscape. But every name and number is fictional.<br><br>
@@ -972,7 +1064,6 @@ if page == "🔌 Data Sources":
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("🔄 Generate Fresh Demo Data", use_container_width=True, type="primary"):
-                # Clear cache so fresh data generates
                 generate_mock_mse_data.clear()
                 fresh_df = generate_mock_mse_data(n_records)
                 fresh_df["Data Source"] = "🎲 Synthetic Demo"
@@ -983,7 +1074,6 @@ if page == "🔌 Data Sources":
                 st.success(f"✅ Generated {n_records:,} fresh demo records.")
                 st.rerun()
 
-        # Show what synthetic data looks like vs what real data looks like
         st.markdown("<p style='color:#1F4E79;font-weight:600;margin-bottom:4px;'>📊 Side-by-side: Demo Data vs Real Data</p>", unsafe_allow_html=True)
         comp = pd.DataFrame([
             ["Enterprise Name",   "Shree Industries Pvt Ltd (random words)", "Vijaya Cotton Mills Pvt Ltd (actual company)"],
@@ -1089,10 +1179,8 @@ elif page == "📊 Dashboard":
                               paper_bgcolor="white", plot_bgcolor="white",
                               font=dict(family="Inter", size=11, color="#212529"),
                               xaxis=dict(tickfont=dict(color="#495057",size=10),
-                                         title_font=dict(color="#495057"),
                                          gridcolor="#e9ecef", linecolor="#dee2e6"),
                               yaxis=dict(tickfont=dict(color="#212529",size=10),
-                                         title_font=dict(color="#495057"),
                                          gridcolor="#e9ecef", linecolor="#dee2e6"))
             st.plotly_chart(fig, use_container_width=True)
 
@@ -1128,10 +1216,8 @@ elif page == "📊 Dashboard":
                               font=dict(family="Inter", size=10, color="#212529"),
                               xaxis=dict(tickangle=-35,
                                          tickfont=dict(size=9, color="#212529"),
-                                         title_font=dict(color="#495057"),
                                          gridcolor="#e9ecef", linecolor="#dee2e6"),
                               yaxis=dict(tickfont=dict(color="#495057", size=9),
-                                         title_font=dict(color="#495057"),
                                          gridcolor="#e9ecef", linecolor="#dee2e6"))
             st.plotly_chart(fig, use_container_width=True)
 
@@ -1156,18 +1242,15 @@ elif page == "📊 Dashboard":
                                   legend=dict(font=dict(size=10, color="#212529"),
                                               bgcolor="rgba(255,255,255,0.9)"),
                                   xaxis=dict(title="Days",
-                                             title_font=dict(color="#495057"),
                                              tickfont=dict(color="#495057"),
                                              gridcolor="#e9ecef", linecolor="#dee2e6"),
                                   yaxis=dict(title="Count",
-                                             title_font=dict(color="#495057"),
                                              tickfont=dict(color="#495057"),
                                              gridcolor="#e9ecef", linecolor="#dee2e6"))
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No onboarding time data available yet.")
 
-    # Data source breakdown (only if mixed sources)
     if "Data Source" in df_mse.columns and df_mse["Data Source"].nunique() > 1:
         st.markdown('<div class="section-header">🔌 Data Source Breakdown</div>', unsafe_allow_html=True)
         src_df = df_mse.groupby("Data Source").size().reset_index(name="Count")
@@ -1257,7 +1340,7 @@ elif page == "🤖 AI Registration":
         with st.form("ai_reg_manual"):
             c1,c2 = st.columns(2)
             with c1:
-                r_name = st.text_input("Enterprise Name*")
+                r_name   = st.text_input("Enterprise Name*")
                 r_state  = st.selectbox("State*", INDIAN_STATES)
                 r_sector = st.selectbox("Sector*", SECTORS)
             with c2:
