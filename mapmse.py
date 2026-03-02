@@ -13,7 +13,7 @@ HOW DATA FLOWS INTO THIS SYSTEM (Plain English):
   SOURCE 4 → Use demo/synthetic data                  (fallback default)
 
 The app detects which source is active and uses it across all pages.
-─────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────.
 """
 
 import streamlit as st
