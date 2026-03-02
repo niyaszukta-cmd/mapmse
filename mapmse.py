@@ -56,7 +56,7 @@ st.markdown("""
   /* Section headers */
   .section-header {
     background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
-    color: white;
+    color: black;
     padding: 12px 20px;
     border-radius: 8px;
     margin: 16px 0 12px 0;
@@ -107,7 +107,7 @@ st.markdown("""
   }
   .stTabs [aria-selected="true"] {
     background: #1F4E79 !important;
-    color: white !important;
+    color: black !important;
   }
 
   /* Dataframe */
@@ -359,7 +359,7 @@ if page == "📊 Dashboard":
         fig.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=0), showlegend=False,
                           coloraxis_showscale=False, paper_bgcolor='white', plot_bgcolor='white',
                           font=dict(family="Inter", size=11))
-        fig.update_traces(text=state_counts["count"], textposition="inside", textfont=dict(color="white", size=10))
+        fig.update_traces(text=state_counts["count"], textposition="inside", textfont=dict(color="black", size=10))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
